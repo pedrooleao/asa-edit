@@ -481,3 +481,29 @@ details[open] > summary { color: var(--texto); }
 .lista-camadas { display: flex; flex-direction: column; gap: 0.4rem; align-items: flex-start; }
 .linha-camada { display: grid; grid-template-columns: 10rem 1fr auto; gap: 0.75rem; align-items: center; width: 100%; padding: 0.5rem 0.7rem; background: var(--painel); border: 1px solid var(--linha); border-radius: 0.4rem; }
 .linha-camada .dica { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ------------------------------------------------------------------ efeitos */
+.efeitos { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; padding: 0.75rem 1rem 2rem; gap: 1rem; }
+.rack { display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: 0.4rem; }
+.cartao-fx { display: grid; grid-template-columns: auto 1fr; grid-template-areas: 'num mix' 'nome nome' 'onde onde'; gap: 0.1rem 0.5rem; text-align: left; padding: 0.5rem 0.65rem; background: var(--painel); border-left: 4px solid var(--cor); min-height: 5rem; align-content: start; }
+.cartao-fx.sel { border-color: var(--selecao); border-left-color: var(--cor); background: #222830; box-shadow: inset 0 0 0 1px var(--selecao); }
+.cartao-fx.vazio { opacity: 0.6; }
+.fx-num { grid-area: num; color: var(--apagado); font-size: 0.8125rem; }
+.fx-mix { grid-area: mix; justify-self: end; color: var(--apagado); font-size: 0.75rem; }
+.cartao-fx strong { grid-area: nome; font-size: 1rem; }
+.fx-onde { grid-area: onde; color: var(--apagado); font-size: 0.8125rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.detalhe-fx { background: var(--painel); border: 1px solid var(--linha); border-radius: 0.5rem; padding: 0.75rem 1rem 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+.detalhe-cab { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.detalhe-cab h2 { font-size: 1.25rem; }
+.detalhe-cab select { min-width: 14rem; }
+.mix-fx { flex: 1; min-width: 16rem; max-width: 26rem; }
+.onde-fx ul { list-style: none; margin: 0.3rem 0; padding: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+.onde-fx li { display: flex; align-items: center; gap: 0.3rem; }
+.usar-em { margin-top: 0.4rem; }
+.usar-em select { max-width: 14rem; }
+.geq { display: flex; gap: 0.15rem; height: 11rem; padding: 0.5rem; background: var(--trilho); border-radius: 0.4rem; overflow-x: auto; }
+.geq-banda { flex: 1 0 1.6rem; display: flex; flex-direction: column; align-items: center; gap: 0.2rem; }
+.geq-banda span { font-size: 0.6875rem; color: var(--apagado); }
+.geq-trilho { flex: 1; width: 100%; position: relative; cursor: ns-resize; touch-action: none; border-radius: 0.2rem; background: #181b20; }
+.geq-barra { position: absolute; left: 25%; right: 25%; background: var(--selecao); border-radius: 0.15rem; }
+.geq-zero { position: absolute; left: 0; right: 0; height: 1px; background: var(--linha); }

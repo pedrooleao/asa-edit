@@ -95,7 +95,8 @@ export function PainelCanal() {
 function LuzBloco({ prefixo, aba }: { prefixo: string; aba: AbaPainel }) {
   const c = aba === 'eq' ? `${prefixo}/eq/on` : aba === 'gate' ? `${prefixo}/gate/on` : aba === 'comp' ? `${prefixo}/dyn/on` : aba === 'inserts' ? `${prefixo}/preins/on` : null;
   const v = useValor(c);
-  return <span className={`luz ${v ? 'acesa' : ''}`} aria-hidden="true" />;
+  const v2 = useValor(aba === 'inserts' ? `${prefixo}/postins/on` : null);
+  return <span className={`luz ${v || v2 ? 'acesa' : ''}`} aria-hidden="true" />;
 }
 
 // ---------------------------------------------------------------------------

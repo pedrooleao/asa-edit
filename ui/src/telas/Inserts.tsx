@@ -6,6 +6,7 @@ import { def, definir, useTexto, useValor } from '../store';
 import { Botao, Deslizante, Lista } from '../comp/Parametro';
 import { mudarUi } from '../ui';
 import { Icone } from '../comp/Icones';
+import { nomeDoModelo } from './Efeitos';
 
 const BLOCOS: Record<string, string> = { G: 'Gate', E: 'EQ', D: 'Dinâmica', I: 'Insert' };
 
@@ -16,7 +17,7 @@ function NomeFx({ caminho }: { caminho: string }) {
   if (!n) return null;
   return (
     <button className="link" onClick={() => mudarUi({ tela: 'efeitos' })} title="Abrir na tela Efeitos">
-      FX {n}: {mdl && mdl !== 'NONE' ? mdl : 'vazio'}
+      FX {n}: {nomeDoModelo(mdl || 'NONE')}
     </button>
   );
 }
@@ -80,7 +81,7 @@ export function Inserts({ prefixo }: { prefixo: string }) {
       )}
       {def(`${prefixo}/postins/on`) && (
         <div className="cartao">
-          <div className="cartao-cab"><h3>Insert 2 (depois do fader)</h3><Botao caminho={`${prefixo}/postins/on`} rotulo="Ligado" /></div>
+          <div className="cartao-cab"><h3>Insert 2</h3><Botao caminho={`${prefixo}/postins/on`} rotulo="Ligado" /></div>
           {def(`${prefixo}/postins/mode`) && <Lista caminho={`${prefixo}/postins/mode`} rotulo="Modo" />}
           <Lista caminho={`${prefixo}/postins/ins`} rotulo="Efeito" />
           <NomeFx caminho={`${prefixo}/postins/ins`} />
