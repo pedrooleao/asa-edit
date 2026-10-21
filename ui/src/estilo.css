@@ -71,7 +71,7 @@ h3 { font-size: 0.8125rem; color: var(--apagado); font-weight: 500; }
 
 /* ------------------------------------------------------------------ conexao */
 .conexao { max-width: 40rem; margin: 8vh auto; padding: 0 1rem; overflow: auto; max-height: 100%; }
-.conexao-marca { font-size: 1rem; font-weight: 600; color: var(--selecao); letter-spacing: 0.04em; margin-bottom: 1.5rem; }
+.conexao-marca { font-size: 1.125rem; font-weight: 600; letter-spacing: 0.04em; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.6rem; }
 .conexao h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
 .conexao h2 { font-size: 1rem; margin-top: 1.5rem; color: var(--apagado); font-weight: 500; }
 .conexao .estado { margin: 1rem 0; }
@@ -92,7 +92,8 @@ h3 { font-size: 0.8125rem; color: var(--apagado); font-weight: 500; }
 .app.offline .conteudo { filter: grayscale(0.9) brightness(0.7); }
 
 .barra-lateral { width: 5rem; flex: none; background: var(--painel); border-right: 1px solid var(--linha); display: flex; flex-direction: column; align-items: stretch; padding: 0.5rem 0.35rem; gap: 0.2rem; overflow-y: auto; }
-.barra-lateral .logo { font-weight: 600; color: var(--selecao); text-align: center; padding: 0.4rem 0 0.7rem; letter-spacing: 0.04em; }
+.barra-lateral .logo { font-weight: 600; color: var(--texto); text-align: center; padding: 0.3rem 0 0.6rem; letter-spacing: 0.04em; display: flex; flex-direction: column; align-items: center; gap: 0.15rem; font-size: 0.8125rem; }
+.barra-lateral .logo img, .conexao-marca img { width: 2.25rem; height: 2.25rem; }
 .barra-lateral button { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; padding: 0.5rem 0.2rem; background: transparent; border-color: transparent; color: var(--apagado); font-size: 0.75rem; }
 .barra-lateral button:hover { color: var(--texto); background: var(--elevado); }
 .barra-lateral button.ativa { color: var(--texto); background: var(--elevado); border-color: var(--linha); box-shadow: inset 3px 0 0 var(--selecao); }

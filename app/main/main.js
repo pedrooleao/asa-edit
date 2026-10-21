@@ -58,7 +58,7 @@ function abrirJanela() {
     ...limites,
     minWidth: 900,
     minHeight: 600,
-    backgroundColor: '#0f1115',
+    backgroundColor: '#17191d',
     title: 'Asa',
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
     trafficLightPosition: { x: 14, y: 14 },

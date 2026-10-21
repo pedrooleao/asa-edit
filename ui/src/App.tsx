@@ -85,7 +85,7 @@ function BarraLateral() {
   const tela = useUi('tela');
   return (
     <nav className="barra-lateral" aria-label="Telas">
-      <div className="logo" aria-hidden="true">Asa</div>
+      <div className="logo" aria-hidden="true"><img src="/icone-64.png" alt="" />Asa</div>
       {TELAS.map((t, i) => (
         <button
           key={t.id}
