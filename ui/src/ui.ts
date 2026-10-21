@@ -1,7 +1,7 @@
 // Estado da interface que nao e' da mesa: tela aberta, tira selecionada,
 // painel do canal, zoom. Fica neste navegador (cada janela tem o seu).
 
-import { useSyncExternalStore } from 'react';
+import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { gravarLocal, lerLocal } from './util';
 
 export type Tela = 'mixer' | 'retornos' | 'roteamento' | 'efeitos' | 'medidores' | 'monitor' | 'biblioteca' | 'config';
@@ -63,3 +63,14 @@ export function aplicarZoom(z: number) {
   mudarUi({ zoom });
 }
 aplicarZoom(estado.zoom);
+
+/** Fecha janelas com Esc (e deixa o foco no primeiro controle dela). */
+export function useFecharComEsc(fechar: () => void) {
+  const ref = useRef(fechar);
+  ref.current = fechar;
+  useEffect(() => {
+    const tecla = (ev: KeyboardEvent) => { if (ev.key === 'Escape') { ev.stopPropagation(); ref.current(); } };
+    window.addEventListener('keydown', tecla, true);
+    return () => window.removeEventListener('keydown', tecla, true);
+  }, []);
+}

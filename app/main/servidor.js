@@ -418,6 +418,6 @@ module.exports = { iniciarServidor };
 // Rodar sem o Electron (para testar no navegador): node app/main/servidor.js
 if (require.main === module) {
   const s = iniciarServidor({ pastaConfig: process.env.ASA_CONFIG || path.join(os.tmpdir(), 'asa') });
-  s.on('pronto', (i) => console.log(`Asa no ar: ${i.url}`));
+  s.on('pronto', (i) => console.log(`Asa Edit no ar: ${i.url}`));
   s.on('falhou', (e) => { console.error(e.message); process.exit(1); });
 }

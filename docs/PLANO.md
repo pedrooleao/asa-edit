@@ -1,4 +1,4 @@
-# Plano do Asa
+# Plano do Asa Edit
 
 Meta do Pedro: **quase tudo o que o WING Edit faz, em dark mode, bem mais simples de
 usar**, e funcionando bem no Mac. Referência visual do que existe hoje:
@@ -51,7 +51,12 @@ tarefa, as opções raras ficam a um clique, e nada usa letras minúsculas de 9 
 - [x] Interface mínima: tela de conexão (procura, lista de mesas, IP manual, progresso)
 - [x] Testado: emulador → servidor → navegador; mudança num cliente aparece no outro
 
-## Fase 1: mixer e canal (prioridade 1)
+## Fase 1: mixer e canal (pronta)
+
+Feito como descrito abaixo, mais: camadas da Compact importadas da snap, botão
+"Limpar solos" com contagem, aviso de reconexão sem perder a tela. Testado com
+Playwright (mute, fader, duplo clique, M/S, renomear, DCA) e 56 quadros/s com 40 tiras.
+
 
 1. Estrutura: barra lateral esquerda estreita com ícones + texto (Mixer, Retornos,
    Roteamento, Efeitos, Medidores, Monitor, Biblioteca, Configurações); barra de cima
@@ -81,7 +86,11 @@ Pronto quando: os 40 canais respondem com fluidez no emulador, medidores sem tra
 (CPU razoável com 40 tiras), tudo escala de 1280×800 a 2560×1440, e o print de
 referência tem equivalente para cada controle do HOME.
 
-## Fase 2: retornos in-ear (prioridade 2)
+## Fase 2: retornos in-ear (pronta)
+
+Feito, mais "Ouvir nos fones" (põe a mix do músico nos fones da mesa). Testado: o
+celular (390×844 e 375×667) não consegue mexer fora da própria mix.
+
 
 1. Tela Retornos: lista dos 16 buses (IEM Bateria, IEM Baixo...), mix selecionada
    como "envios nos faders" de todos os canais, volume geral e mute do bus,
@@ -98,7 +107,11 @@ referência tem equivalente para cada controle do HOME.
 Pronto quando: Mac + "celular" (390×844) mexem na mesma mix e um vê o outro mudar; o
 celular não consegue mexer fora da própria mix.
 
-## Fase 3: roteamento e camadas personalizadas (prioridade 3)
+## Fase 3: roteamento e camadas personalizadas (pronta)
+
+Camadas ficam no servidor (valem para todas as janelas). Saídas internas vêm em
+pares E/D (confirmado pela snap do culto: A1/A2 = IEM Bateria, A11 = Mon Mic 1).
+
 
 1. Entradas: tabela dos 40 canais com fonte (lista agrupada: Local 1–24, SD16 A 1–48,
    SD16 B 1–48, USB, Cartão, Dante/MOD, interno), nome da fonte (editável), ganho,
@@ -108,14 +121,23 @@ celular não consegue mexer fora da própria mix.
 3. "Saídas dos retornos": liga em um passo IEM 1→saída X, IEM 2→saída Y...
 4. Camadas personalizadas (como USER 1/2): montar arrastando, guardadas no Mac.
 
-## Fase 4: efeitos e inserts
+## Fase 4: efeitos e inserts (pronta)
+
+Rack com "onde está" (o retorno de FX é o FX como insert num bus), EQ gráfico
+em barras, inserir/tirar FX de qualquer tira, ordem da cadeia por arrastar.
+
 
 1. Rack dos 16 FX (`/fx/N/mdl` + parâmetros do modelo via `Parametro`), com os mais
    usados primeiro: reverbs, delays, GEQ, limiter, de-esser.
 2. Retornos de FX (buses FX Rev Voz etc.) ligados ao FX certo, visível numa tela.
 3. Inserts nos canais/buses (`preins`, `postins`) e ordem da cadeia (`/ch/N/proc`).
 
-## Fase 5: medidores, monitor, biblioteca, configurações, estabilidade
+## Fase 5: medidores, monitor, biblioteca, configurações, estabilidade (pronta)
+
+Biblioteca abre e salva **.snap do WING Edit** (`app/main/snap.js`). `npm test` cobre
+protocolo e snapshots. O .dmg sai do GitHub Actions (`.github/workflows/mac.yml`),
+que abre o app empacotado num Mac contra o emulador antes de publicar a release.
+
 
 1. Medidores: tela cheia com todos os canais, buses, mains e matrizes.
 2. Monitor: fones/alto-falante, solo bus, talkback (`/cfg/mon`, `/cfg/solo`, `/cfg/talk`).
@@ -136,6 +158,18 @@ modo voluntário (tela travada), modo aula para o curso de sonoplastia, ASSIGN/C
 (botões da superfície).
 
 ## Confirmar na mesa
+
+Já confirmado pela snap do culto (`Culto - Wing.snap`, não vai para o repositório,
+que é público): DCA e mute group ficam nas tags (`#D1,#M2`); saídas de bus, main e
+matriz em pares E/D.
+
+Falta confirmar na WING de verdade:
+- Escrever `$solo`, `/cfg/solo/$dim|$mono|$flip` e `/cfg/talk/A/$on` (o `$` costuma
+  ser só leitura; o emulador aceita).
+- `/$syscfg/consolename` pode ser escrito pela rede?
+- Abrir um show inteiro (20 mil valores em lotes de 120 a cada 20 ms) sem a mesa engasgar.
+- A .snap salva pelo Asa Edit abre no WING Edit (com a snap de base, deve abrir).
+- `$stat` dos inserts ("N/A" quando o FX não serve ali).
 
 - Pedido de dados em nó vs folha; `DE` por pedido.
 - Escala das palavras de gate/comp nos medidores.

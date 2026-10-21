@@ -1,4 +1,4 @@
-# Monta o instalavel do Asa para Mac (Apple Silicon), testa o app empacotado
+# Monta o instalavel do Asa Edit para Mac (Apple Silicon), testa o app empacotado
 # contra o emulador da WING e publica o .dmg numa release.
 #
 # Dispara a cada push na main e pelo botao "Run workflow" nesta tela do
@@ -57,9 +57,9 @@ jobs:
         run: |
           (cd emulador && MESA_SINAL_TESTE=1 node server.js > ../emulador.log 2>&1 &)
           sleep 3
-          dmg="$(ls dist/*.dmg)"
+          dmg="$(ls dist/*.dmg | head -1)"
           hdiutil attach "$dmg" -nobrowse -mountpoint /Volumes/asa >/dev/null
-          "/Volumes/asa/Asa.app/Contents/MacOS/Asa" > app.log 2>&1 &
+          "/Volumes/asa/Asa Edit.app/Contents/MacOS/Asa Edit" > app.log 2>&1 &
           app=$!
           ok=0
           node scripts/teste-fumaca.js 127.0.0.1 && ok=1
@@ -94,11 +94,11 @@ jobs:
           notas=".github/notas/v$versao.md"
           if [ -f "$notas" ]; then
             titulo="$(head -n 1 "$notas" | sed -n 's/^# //p')"
-            echo "TITULO=${titulo:-Asa $versao}" >> "$GITHUB_ENV"
+            echo "TITULO=${titulo:-Asa Edit $versao}" >> "$GITHUB_ENV"
             if [ -n "$titulo" ]; then tail -n +2 "$notas" > corpo.md; else cp "$notas" corpo.md; fi
           else
-            echo "TITULO=Asa $versao" >> "$GITHUB_ENV"
-            echo "Instalável do Asa para Mac (Apple Silicon)." > corpo.md
+            echo "TITULO=Asa Edit $versao" >> "$GITHUB_ENV"
+            echo "Instalável do Asa Edit para Mac (Apple Silicon)." > corpo.md
           fi
           printf '\n\n---\nMontado a partir de %s.\n' "${GITHUB_SHA::7}" >> corpo.md
           # A tag da versao acompanha o commit mais novo desta versao.

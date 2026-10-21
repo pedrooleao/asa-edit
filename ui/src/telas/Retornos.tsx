@@ -5,7 +5,7 @@
 import { useMemo, useState } from 'react';
 import qrcode from 'qrcode-generator';
 import { def, definir, enviar, indiceMedidor, useGeral, useNumero, useTexto, useValor, useValores, valor } from '../store';
-import { mudarUi, useUi } from '../ui';
+import { mudarUi, useFecharComEsc, useUi } from '../ui';
 import { corWing, lista, nomeDaTira, partesDaTira, textoDb, FADER_MIN } from '../util';
 import { Fader } from '../comp/Fader';
 import { Medidor } from '../comp/Medidor';
@@ -106,6 +106,7 @@ function JanelaCelular({ bus, fechar }: { bus: number; fechar: () => void }) {
   const url = `http://${ip}:${porta}/?retorno=${bus}`;
   const acesso = geral?.config.acessoRede;
   const nome = nomeDaTira(`/bus/${bus}`);
+  useFecharComEsc(fechar);
   return (
     <div className="fundo-modal" onClick={fechar}>
       <div className="modal" role="dialog" aria-modal="true" aria-label="Abrir no celular" onClick={(e) => e.stopPropagation()}>
@@ -161,6 +162,8 @@ export function Retornos() {
   const esconder = useUi('esconderVazios');
   const [qr, setQr] = useState(false);
   const [copiarDe, setCopiarDe] = useState('');
+  const [feito, setFeito] = useState('');
+  const avisar = (t: string) => { setFeito(t); setTimeout(() => setFeito(''), 2500); };
   const p = `/bus/${bus}`;
   const nome = nomeDaTira(p, useValor(`${p}/name`));
   const cor = corWing(useValor(`${p}/col`));
@@ -182,6 +185,7 @@ export function Retornos() {
       }
     }
     lote(pares);
+    avisar(`Mix de ${nomeDaTira(`/bus/${de}`)} copiada`);
   }
 
   return (
@@ -201,8 +205,9 @@ export function Retornos() {
               <option value="">Copiar de…</option>
               {Array.from({ length: 16 }, (_, i) => i + 1).filter((n) => n !== bus).map((n) => <option key={n} value={n}>{nomeDaTira(`/bus/${n}`)}</option>)}
             </select>
-            <button onClick={() => { if (confirm(`Zerar a mix de ${nome}? Todos os envios vão para −∞.`)) lote(FONTES.filter((f) => def(`${f}/send/${bus}/lvl`)).map((f) => [`${f}/send/${bus}/lvl`, FADER_MIN])); }}>Zerar mix</button>
-            <button onClick={() => lote(FONTES.filter((f) => def(`${f}/send/${bus}/on`) && !canalVazio(f)).map((f) => [`${f}/send/${bus}/on`, 1]))}>Ligar todos</button>
+            {feito && <span className="feito" role="status"><Icone nome="check" tamanho={1} />{feito}</span>}
+            <button onClick={() => { if (confirm(`Zerar a mix de ${nome}? Todos os envios vão para −∞.`)) { lote(FONTES.filter((f) => def(`${f}/send/${bus}/lvl`)).map((f) => [`${f}/send/${bus}/lvl`, FADER_MIN])); avisar('Mix zerada'); } }}>Zerar mix</button>
+            <button onClick={() => { lote(FONTES.filter((f) => def(`${f}/send/${bus}/on`) && !canalVazio(f)).map((f) => [`${f}/send/${bus}/on`, 1])); avisar('Todos ligados'); }}>Ligar todos</button>
             <label className="caixa">
               <input type="checkbox" checked={esconder} onChange={(e) => mudarUi({ esconderVazios: e.target.checked })} />
               Esconder canais vazios

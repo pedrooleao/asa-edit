@@ -185,7 +185,7 @@ function escreverSnap(esquema, valores, base = null, info = {}) {
     creator_sn: snap.creator_sn || 'NO_SERIAL',
     creator_model: snap.creator_model || 'WING-EDIT',
     creator_version: snap.creator_version || '3.3.3',
-    creator_name: 'Asa',
+    creator_name: 'Asa Edit',
     ...snap,
     created: data,
   };

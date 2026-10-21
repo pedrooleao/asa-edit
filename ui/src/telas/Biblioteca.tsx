@@ -49,7 +49,7 @@ function Shows() {
   return (
     <section className="secao larga">
       <h2>Shows</h2>
-      <p className="dica">O Asa abre e salva arquivos <strong>.snap</strong>, o mesmo formato do WING Edit. Abrir um show escreve tudo dele na mesa.</p>
+      <p className="dica">O Asa Edit abre e salva arquivos <strong>.snap</strong>, o mesmo formato do WING Edit. Abrir um show escreve tudo dele na mesa.</p>
       <div className="linha-info">
         <button className="primario com-icone" onClick={() => arquivo.current?.click()}><Icone nome="abrir" tamanho={1.1} />Abrir arquivo .snap…</button>
         <input ref={arquivo} type="file" accept=".snap,.json,application/json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) abrirArquivo(f); e.target.value = ''; }} />
@@ -75,7 +75,7 @@ function Shows() {
       }}>
         <input aria-label="Nome do show" placeholder="Nome (ex.: Culto domingo)" value={nome} onChange={(e) => setNome(e.target.value)} maxLength={60} />
         <button type="submit" className="com-icone" disabled={!nome.trim()}><Icone nome="salvar" tamanho={1} />Salvar o estado atual</button>
-        <button type="button" className="com-icone" onClick={() => enviar({ t: 'salvarSnap', baixar: true, nome: nome.trim() || 'Asa' })}><Icone nome="baixar" tamanho={1} />Baixar .snap</button>
+        <button type="button" className="com-icone" onClick={() => enviar({ t: 'salvarSnap', baixar: true, nome: nome.trim() || 'Asa Edit' })}><Icone nome="baixar" tamanho={1} />Baixar .snap</button>
         {aviso && <span className="ok-txt"><Icone nome="check" tamanho={1} /> {aviso}</span>}
       </form>
       <div className="lista-shows">

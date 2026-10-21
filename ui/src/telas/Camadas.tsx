@@ -4,7 +4,7 @@
 
 import { useState } from 'react';
 import { enviar, useGeral, useValor, type Camada } from '../store';
-import { mudarUi } from '../ui';
+import { mudarUi, useFecharComEsc } from '../ui';
 import { corWing, lista, nomeDaTira, numeroCurto, type TipoTira } from '../util';
 import { Icone } from '../comp/Icones';
 
@@ -28,6 +28,7 @@ export function EditorCamada({ inicial, indice, fechar }: { inicial: Camada; ind
   const [nome, setNome] = useState(inicial.nome);
   const [tiras, setTiras] = useState<string[]>(inicial.tiras);
   const [arrastando, setArrastando] = useState<number | null>(null);
+  useFecharComEsc(fechar);
   const alternar = (t: string) => setTiras(tiras.includes(t) ? tiras.filter((x) => x !== t) : [...tiras, t]);
   const mover = (de: number, para: number) => {
     if (para < 0 || para >= tiras.length) return;

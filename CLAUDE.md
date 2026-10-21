@@ -1,4 +1,4 @@
-# Asa: controle da Behringer WING para Mac
+# Asa Edit: controle da Behringer WING para Mac
 
 App de Mac (Electron) para controlar a WING Compact da igreja, porque o WING Edit
 no Mac escala mal e tem fluxo confuso, e o Mixing Station não cobre tudo.
@@ -23,7 +23,13 @@ npm run servidor
 npm run ui                                        # abre em http://localhost:5173
 # app completo no Electron
 npm run app
-# gerar o .app para Mac (Apple Silicon), na pasta dist/
+# testes do protocolo e das snapshots
+npm test
+# carregar um show no emulador (nomes do PLANO, ou uma .snap do WING Edit)
+node scripts/carregar-show-teste.js [arquivo.snap --subir]
+# emulador com sinal de teste nos medidores (sem o player tocando)
+cd emulador && MESA_SINAL_TESTE=1 node server.js
+# gerar o .app e o .dmg (só no macOS); o GitHub Actions faz isso a cada push na main
 npm run mac
 # teste rápido do protocolo contra o emulador ou uma mesa real
 npm run testar:conexao              # ou: node scripts/testar-conexao.js 192.168.1.62
@@ -39,8 +45,17 @@ app/main/wing.js       ConexaoWing: descoberta, sincronização, escrita, medido
 app/main/esquema.js    árvore de parâmetros (52 mil caminhos → id/tipo/faixa), de esquema.json.gz
 app/main/servidor.js   HTTP (serve ui-dist + /esquema.json) e WebSocket para a interface
 app/main/main.js       Electron: sobe o servidor e abre a janela em http://127.0.0.1:8730
+app/main/snap.js       ler/escrever .snap do WING Edit (modelos sem o nome no caminho, true/false)
 ui/src/store.ts        estado da interface: esquema, valores por id, medidores, envio
-ui/src/App.tsx         telas (por enquanto só a de conexão)
+ui/src/ui.ts           estado só da tela (tela aberta, tira selecionada, painel, zoom)
+ui/src/util.ts         curva do fader, textos (dB, Hz), cores da WING, tags #D/#M, fontes
+ui/src/App.tsx         estrutura: barra lateral, barra de cima, atalhos, aviso de reconexão
+ui/src/comp/           Fader, Medidor (canvas), Parametro (editor pelo esquema), Tira,
+                       EqGrafico (biquads RBJ), Fonte, Icones
+ui/src/telas/          Mixer, PainelCanal, Inserts, Retornos, Celular, Roteamento, Camadas,
+                       Efeitos, Medidores, Monitor, Biblioteca, Configuracoes, Conexao
+scripts/montar-mac.sh  .app + .dmg (assinatura ad-hoc); fazer-icone.py gera o ícone
+.github/workflows/     mac.yml: testes, .dmg, teste do app empacotado, release
 ```
 
 - A interface **sempre** fala com o servidor por WebSocket, nunca com a mesa. Assim
@@ -79,3 +94,8 @@ ui/src/App.tsx         telas (por enquanto só a de conexão)
   curvas são aproximadas). Antes de dizer que algo funciona, teste no emulador; o que
   depende de comportamento real fica marcado como "confirmar na mesa" no PLANO.
 - Testes visuais: Playwright com Chromium contra `npm run servidor` + emulador.
+- Parâmetros com `$` no caminho são em geral só leitura (ex.: `/cfg/mon/1/$lvl`, o botão
+  de volume dos fones); a snap não os traz e o Asa Edit não os escreve ao abrir um show.
+- DCA e mute group de uma tira ficam em `/…/tags` como `#D1,#M2` (`lerTags`/`montarTags`).
+- Saídas de bus/main/matriz: `/io/out/A/n/grp = BUS`, `in` = 2·bus−1 (E) e 2·bus (D).
+- O repositório é público: não commitar a snap da igreja nem nada pessoal.

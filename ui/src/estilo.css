@@ -7,8 +7,9 @@
   --elevado-2: #333842;
   --linha: #353a43;
   --texto: #e9e6df;
-  --apagado: #8e939b;
+  --apagado: #9ea3ab;
   --mute: #e5484d;
+  --mute-fundo: #d13b40;   /* fundo com texto branco: 4,8:1 */
   --solo: #f2b33d;
   --selecao: #6cc6e0;
   --sinal: #58cf7a;
@@ -35,6 +36,7 @@ body {
 input, textarea { user-select: text; }
 button, input, select { font: inherit; color: inherit; }
 button {
+  touch-action: manipulation;
   background: var(--elevado);
   border: 1px solid var(--linha);
   border-radius: var(--raio);
@@ -92,7 +94,7 @@ h3 { font-size: 0.8125rem; color: var(--apagado); font-weight: 500; }
 .app.offline .conteudo { filter: grayscale(0.9) brightness(0.7); }
 
 .barra-lateral { width: 5rem; flex: none; background: var(--painel); border-right: 1px solid var(--linha); display: flex; flex-direction: column; align-items: stretch; padding: 0.5rem 0.35rem; gap: 0.2rem; overflow-y: auto; }
-.barra-lateral .logo { font-weight: 600; color: var(--texto); text-align: center; padding: 0.3rem 0 0.6rem; letter-spacing: 0.04em; display: flex; flex-direction: column; align-items: center; gap: 0.15rem; font-size: 0.8125rem; }
+.barra-lateral .logo { font-weight: 600; color: var(--texto); text-align: center; padding: 0.3rem 0 0.6rem; line-height: 1.15; display: flex; flex-direction: column; align-items: center; gap: 0.15rem; font-size: 0.8125rem; }
 .barra-lateral .logo img, .conexao-marca img { width: 2.25rem; height: 2.25rem; }
 .barra-lateral button { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; padding: 0.5rem 0.2rem; background: transparent; border-color: transparent; color: var(--apagado); font-size: 0.75rem; }
 .barra-lateral button:hover { color: var(--texto); background: var(--elevado); }
@@ -169,7 +171,7 @@ h3 { font-size: 0.8125rem; color: var(--apagado); font-weight: 500; }
 .tira-num { font-weight: 600; font-size: 0.875rem; color: var(--apagado); }
 .tira.sel .tira-num { color: var(--selecao); }
 .pontinhos { display: flex; flex-wrap: wrap; gap: 0.15rem; justify-content: center; padding: 0 0.2rem; }
-.pt { font-size: 0.6875rem; line-height: 1; padding: 0.12rem 0.2rem; border-radius: 0.2rem; background: var(--elevado); color: var(--apagado); }
+.pt { font-size: 0.75rem; line-height: 1; padding: 0.12rem 0.2rem; border-radius: 0.2rem; background: var(--elevado); color: var(--apagado); }
 .pt.mg { color: #f3a3a5; }
 .tira.mutada .tira-meio { opacity: 0.7; }
 
@@ -184,7 +186,7 @@ h3 { font-size: 0.8125rem; color: var(--apagado); font-weight: 500; }
 .grupo-botao .grupo-num { font-size: 0.75rem; color: var(--apagado); }
 .grupo-botao .grupo-nome { font-size: 0.8125rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .grupo-botao.vazio { opacity: 0.55; }
-.grupo-botao.ligado { background: var(--mute); border-color: var(--mute); color: #fff; opacity: 1; }
+.grupo-botao.ligado { background: var(--mute-fundo); border-color: var(--mute-fundo); color: #fff; opacity: 1; }
 .grupo-botao.ligado .grupo-num { color: #ffe1e1; }
 
 /* ------------------------------------------------------------------ fader */
@@ -193,8 +195,8 @@ h3 { font-size: 0.8125rem; color: var(--apagado); font-weight: 500; }
 .fader-trilho { position: absolute; left: 50%; top: 0.6rem; bottom: 0.6rem; width: 0.3rem; margin-left: -0.15rem; background: var(--trilho); border-radius: 0.2rem; }
 .fader-cheio { position: absolute; bottom: 0; left: 0; right: 0; background: #4a5260; border-radius: 0.2rem; }
 .fader-marcas { position: absolute; left: 0; right: 0; top: 0.6rem; bottom: 0.6rem; pointer-events: none; }
-.fader-marcas span { position: absolute; right: calc(50% + 0.55rem); transform: translateY(50%); font-size: 0.625rem; color: #6b717a; line-height: 1; }
-.fader-marcas span.zero { color: var(--apagado); }
+.fader-marcas span { position: absolute; right: calc(50% + 0.55rem); transform: translateY(50%); font-size: 0.75rem; color: var(--apagado); line-height: 1; }
+.fader-marcas span.zero { color: var(--texto); }
 .fader-botao { position: absolute; width: 2.2rem; max-width: 100%; height: 1.2rem; background: linear-gradient(#e5e2db, #b9b6af); border-radius: 0.2rem; box-shadow: 0 1px 2px #0008; }
 .fader.v .fader-botao { left: 50%; bottom: calc(0.6rem + (100% - 1.2rem) * var(--p, 0)); transform: translate(-50%, 50%); }
 .fader.v .fader-botao::after { content: ''; position: absolute; left: 0.2rem; right: 0.2rem; top: 50%; height: 2px; margin-top: -1px; background: #1a1c20; }
@@ -215,7 +217,7 @@ h3 { font-size: 0.8125rem; color: var(--apagado); font-weight: 500; }
 /* ------------------------------------------------------------------ botoes de liga */
 .botao-liga { min-width: 2rem; }
 .botao-liga.ligado { background: var(--ligado); border-color: #4b9b72; color: #fff; }
-.botao-liga.mute.ligado { background: var(--mute); border-color: var(--mute); }
+.botao-liga.mute.ligado { background: var(--mute-fundo); border-color: var(--mute-fundo); color: #fff; }
 .botao-liga.mute.grupo { border-color: var(--mute); color: #f3a3a5; }
 .botao-liga.solo.ligado { background: var(--solo); border-color: var(--solo); color: #1b1408; }
 .botao-liga.alerta.ligado { background: #8c2d2f; border-color: var(--mute); }
@@ -269,7 +271,7 @@ input.param-valor { width: 100%; background: var(--trilho); border-color: var(--
 .grade-numeros { display: grid; grid-template-columns: repeat(8, 1fr); gap: 0.25rem; }
 .num { padding: 0; min-height: 2rem; font-size: 0.8125rem; }
 .num.ligado { background: var(--selecao); border-color: var(--selecao); color: #0d1418; font-weight: 600; }
-.num.mg.ligado { background: var(--mute); border-color: var(--mute); color: #fff; }
+.num.mg.ligado { background: var(--mute-fundo); border-color: var(--mute-fundo); color: #fff; }
 .membros { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 0.3rem; }
 .membros li { padding: 0.2rem 0.5rem; border-left: 3px solid var(--cor); background: var(--elevado); border-radius: 0.2rem; font-size: 0.8125rem; }
 details > summary { cursor: pointer; color: var(--apagado); padding: 0.3rem 0; }
@@ -284,7 +286,7 @@ details[open] > summary { color: var(--texto); }
 .eq-grafico svg { position: absolute; inset: 0; }
 .eq-grade { stroke: #262a31; stroke-width: 1; }
 .eq-zero { stroke: #3a404a; stroke-width: 1; }
-.eq-rotulo { fill: #6b717a; font-size: 0.6875rem; }
+.eq-rotulo { fill: var(--apagado); font-size: 0.75rem; }
 .eq-curva { fill: none; stroke: var(--selecao); stroke-width: 2; }
 .eq-grafico.desligado .eq-curva { stroke: var(--apagado); stroke-dasharray: 4 3; }
 .eq-ponto { stroke: #0c0d10; stroke-width: 2; }
@@ -340,7 +342,7 @@ details[open] > summary { color: var(--texto); }
 .item-cor { grid-row: 1 / 3; align-self: stretch; width: 0.3rem; border-radius: 0.15rem; background: var(--cor); }
 .item-num { color: var(--apagado); font-size: 0.8125rem; }
 .item-nome { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.item-mute { background: var(--mute); color: #fff; font-size: 0.6875rem; font-weight: 600; padding: 0 0.3rem; border-radius: 0.2rem; }
+.item-mute { background: var(--mute-fundo); color: #fff; font-size: 0.75rem; font-weight: 600; padding: 0 0.3rem; border-radius: 0.2rem; }
 .item-bus .item-medidor { grid-column: 2 / 5; height: 0.25rem; margin-top: 0.2rem; }
 .retorno-mix { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 .retorno-cab { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0.8rem; border-bottom: 1px solid var(--linha); flex-wrap: wrap; }
@@ -391,7 +393,7 @@ details[open] > summary { color: var(--texto); }
 .cel-cab button { min-height: 2.75rem; }
 .cel-cor { width: 0.4rem; align-self: stretch; min-height: 1.6rem; border-radius: 0.2rem; background: var(--cor); flex: none; }
 .cel-geral { margin: 0.75rem; padding: 0.75rem; background: var(--painel); border: 1px solid var(--linha); border-radius: 0.6rem; display: flex; flex-direction: column; gap: 0.5rem; }
-.cel-geral .botao-liga { min-height: 2.5rem; padding: 0.3rem 0.9rem; }
+.cel-geral .botao-liga { min-height: 2.75rem; padding: 0.3rem 1rem; }
 .cel-lista { list-style: none; margin: 0; padding: 0 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; }
 .cel-canal { background: var(--painel); border: 1px solid var(--linha); border-radius: 0.6rem; padding: 0.5rem 0.75rem 0.65rem; display: flex; flex-direction: column; gap: 0.35rem; }
 .cel-canal.desligado { opacity: 0.6; }
@@ -400,7 +402,7 @@ details[open] > summary { color: var(--texto); }
 .cel-nome { flex: 1; text-align: left; background: transparent; border: none; font-size: 1.0625rem; font-weight: 600; padding: 0.3rem 0; min-height: 2.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cel-nome small { font-weight: 400; color: var(--apagado); }
 .cel-db { min-width: 3.5rem; text-align: right; color: var(--apagado); font-size: 0.9375rem; }
-.estrela { background: transparent; border: none; color: #5b616a; padding: 0; min-width: 2.75rem; min-height: 2.75rem; display: grid; place-items: center; }
+.estrela { background: transparent; border: none; color: #80868f; padding: 0; min-width: 2.75rem; min-height: 2.75rem; display: grid; place-items: center; }
 .estrela.ligada { color: var(--solo); }
 .estrela.ligada svg { fill: currentColor; }
 .celular .fader.h { height: 3rem; flex: none; }
@@ -504,7 +506,7 @@ details[open] > summary { color: var(--texto); }
 .usar-em select { max-width: 14rem; }
 .geq { display: flex; gap: 0.15rem; height: 11rem; padding: 0.5rem; background: var(--trilho); border-radius: 0.4rem; overflow-x: auto; }
 .geq-banda { flex: 1 0 1.6rem; display: flex; flex-direction: column; align-items: center; gap: 0.2rem; }
-.geq-banda span { font-size: 0.6875rem; color: var(--apagado); }
+.geq-banda span { font-size: 0.75rem; color: var(--apagado); }
 .geq-trilho { flex: 1; width: 100%; position: relative; cursor: ns-resize; touch-action: none; border-radius: 0.2rem; background: #181b20; }
 .geq-barra { position: absolute; left: 25%; right: 25%; background: var(--selecao); border-radius: 0.15rem; }
 .geq-zero { position: absolute; left: 0; right: 0; height: 1px; background: var(--linha); }
@@ -515,7 +517,7 @@ details[open] > summary { color: var(--texto); }
 .grade-monitor .param { grid-template-columns: 7.5rem 1fr 5rem; }
 .grade-monitor .param.lista { grid-template-columns: 7.5rem 1fr; }
 .botao-falar { min-height: 3rem; font-size: 1.0625rem; font-weight: 600; touch-action: none; }
-.botao-falar.ligado { background: var(--mute); border-color: var(--mute); color: #fff; }
+.botao-falar.ligado { background: var(--mute-fundo); border-color: var(--mute-fundo); color: #fff; }
 .talk .chips { margin-bottom: 0.3rem; }
 .tela-medidores { flex: 1; overflow: auto; padding: 0.75rem 1rem 1rem; display: flex; flex-wrap: wrap; gap: 1rem 1.5rem; align-content: flex-start; }
 .grupo-medidores { display: flex; flex-direction: column; gap: 0.35rem; }
@@ -528,7 +530,7 @@ details[open] > summary { color: var(--texto); }
 .col-medidor-g .medidor.v { width: 0.5rem; }
 .col-medidor-g .medidor.gr { width: 0.25rem; }
 .col-medidor-g .num { font-size: 0.75rem; color: var(--apagado); text-align: center; }
-.col-medidor-g .nome { font-size: 0.6875rem; color: var(--texto); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 0.1rem; }
+.col-medidor-g .nome { font-size: 0.75rem; color: var(--texto); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 0.1rem; }
 .col-medidor-g.mutada .barras { opacity: 0.45; }
 .col-medidor-g:hover { background: var(--elevado); }
 .legenda { flex-basis: 100%; }
@@ -539,3 +541,20 @@ details[open] > summary { color: var(--texto); }
 .ok-txt { color: var(--sinal); display: inline-flex; align-items: center; gap: 0.3rem; }
 .secao .estado { margin: 0.75rem 0; max-width: 30rem; }
 .secao .estado p { margin: 0 0 0.3rem; }
+
+/* Avisos curtos de "deu certo" */
+.feito { color: var(--sinal); display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.875rem; }
+
+/* Quem pediu menos movimento no sistema: sem giro e sem rolagem animada. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0s !important; scroll-behavior: auto !important; }
+  .girando { animation: none; border-right-color: currentColor; opacity: 0.7; }
+  .tiras { scroll-behavior: auto; }
+}
+
+/* Fader curto (tela pequena ou painel alto): so a marca do 0 dB, para os
+   numeros nao se encostarem. */
+.fader.v { container-type: size; }
+@container (max-height: 10rem) {
+  .fader-marcas span:not(.zero) { display: none; }
+}

@@ -32,7 +32,7 @@ function iniciar() {
   });
   servidor.on('falhou', (err) => {
     app.whenReady().then(() => {
-      dialog.showErrorBox('Asa', `Nao consegui iniciar: ${err.message}`);
+      dialog.showErrorBox('Asa Edit', `Nao consegui iniciar: ${err.message}`);
       app.exit(1);
     });
   });
@@ -59,7 +59,7 @@ function abrirJanela() {
     minWidth: 900,
     minHeight: 600,
     backgroundColor: '#17191d',
-    title: 'Asa',
+    title: 'Asa Edit',
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
     trafficLightPosition: { x: 14, y: 14 },
     show: false,
@@ -91,7 +91,7 @@ function abrirJanela() {
 function montarMenu() {
   const mac = process.platform === 'darwin';
   const template = [
-    ...(mac ? [{ role: 'appMenu', label: 'Asa' }] : []),
+    ...(mac ? [{ role: 'appMenu', label: 'Asa Edit' }] : []),
     { role: 'editMenu', label: 'Editar' },
     {
       label: 'Visualizar',

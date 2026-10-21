@@ -1,7 +1,7 @@
 {
-  "name": "asa",
+  "name": "asa-edit",
   "version": "0.2.0",
-  "description": "Asa: controle da Behringer WING (Compact) para Mac, com retornos pelo celular e roteamento visual",
+  "description": "Asa Edit: controle da Behringer WING (Compact) para Mac, com retornos pelo celular e roteamento visual",
   "author": "Pedro",
   "license": "MIT",
   "main": "app/main/main.js",

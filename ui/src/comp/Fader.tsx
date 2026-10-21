@@ -14,7 +14,7 @@ type Props = {
   marcas?: boolean;
 };
 
-const MARCAS = [10, 5, 0, -5, -10, -20, -30, -40, -60];
+const MARCAS = [10, 5, 0, -10, -20, -40, -60];
 
 export function Fader({ caminho, horizontal = false, rotulo, desligado = false, className, marcas = true }: Props) {
   const db = useNumero(caminho, FADER_MIN);

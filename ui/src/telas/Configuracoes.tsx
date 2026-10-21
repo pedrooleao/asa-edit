@@ -39,7 +39,7 @@ export function Configuracoes() {
         <div className="linha-info">
           <strong>{e.info?.nome || 'WING'}</strong>
           <span className="dica">{modelo.replace('wing-', 'WING ').replace('compact', 'Compact')} · {e.ip} · firmware {firmware.split('-')[0]}</span>
-          <button onClick={() => { if (confirm('Desconectar da mesa? O Asa volta para a tela de conexão.')) enviar({ t: 'desconectar' }); }}>Trocar de mesa</button>
+          <button onClick={() => { if (confirm('Desconectar da mesa? O Asa Edit volta para a tela de conexão.')) enviar({ t: 'desconectar' }); }}>Trocar de mesa</button>
         </div>
         <div style={{ maxWidth: '24rem', marginTop: '0.75rem' }}>
           <CampoTexto caminho="/$syscfg/consolename" rotulo="Nome da mesa" />
@@ -59,7 +59,7 @@ export function Configuracoes() {
       </section>
       <section className="secao">
         <h2>Sobre</h2>
-        <p className="dica">Asa, controle da Behringer WING para Mac. Funciona sem internet. Esquema de parâmetros do libwing (Apache-2.0).</p>
+        <p className="dica">Asa Edit, controle da Behringer WING para Mac. Funciona sem internet. Esquema de parâmetros do libwing (Apache-2.0).</p>
       </section>
     </div>
   );

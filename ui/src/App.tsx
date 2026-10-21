@@ -36,8 +36,8 @@ export function App() {
   const estado = geral?.estado.estado;
   useEffect(() => { if (estado === 'conectado') setJaConectou(true); }, [estado]);
 
-  if (!esquema || (!geral && ligadoAoApp)) return <div className="vazio">Abrindo o Asa…</div>;
-  if (!geral) return <div className="vazio">Procurando o Asa no Mac…</div>;
+  if (!esquema || (!geral && ligadoAoApp)) return <div className="vazio">Abrindo o Asa Edit…</div>;
+  if (!geral) return <div className="vazio">Procurando o Asa Edit no Mac…</div>;
   if (papel?.papel === 'retorno') return <Celular />;
   // Antes da primeira conexao: tela de conexao. Depois, se cair, a mesma tela
   // de trabalho continua, com o aviso por cima (ver Principal).
@@ -60,7 +60,7 @@ function Principal() {
         {offline && (
           <div className="aviso-conexao" role="status">
             <span className="girando" aria-hidden="true" />
-            {!ligadoAoApp ? 'O Asa parou de responder. Tentando de novo…'
+            {!ligadoAoApp ? 'O Asa Edit parou de responder. Tentando de novo…'
               : e.estado === 'sincronizando' ? `Reconectado. Lendo a mesa… ${Math.round(progresso * 100)}%`
               : `Reconectando à mesa${e.ip ? ` (${e.ip})` : ''}… Os controles voltam sozinhos.`}
             <button onClick={() => enviar({ t: 'desconectar' })}>Escolher outra mesa</button>
@@ -85,7 +85,7 @@ function BarraLateral() {
   const tela = useUi('tela');
   return (
     <nav className="barra-lateral" aria-label="Telas">
-      <div className="logo" aria-hidden="true"><img src="/icone-64.png" alt="" />Asa</div>
+      <div className="logo" aria-hidden="true"><img src="/icone-64.png" alt="" /><span>Asa Edit</span></div>
       {TELAS.map((t, i) => (
         <button
           key={t.id}
@@ -154,6 +154,8 @@ function useAtalhos() {
     const tecla = (ev: KeyboardEvent) => {
       const alvo = ev.target as HTMLElement;
       if (alvo && (alvo.tagName === 'INPUT' || alvo.tagName === 'SELECT' || alvo.tagName === 'TEXTAREA' || alvo.isContentEditable)) return;
+      // Com uma janela aberta, M e S nao mexem no canal que ficou atras.
+      if (document.querySelector('.fundo-modal')) return;
       const cmd = ev.metaKey || ev.ctrlKey;
       if (cmd && /^[1-8]$/.test(ev.key)) {
         mudarUi({ tela: TELAS[Number(ev.key) - 1].id });

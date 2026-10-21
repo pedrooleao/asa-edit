@@ -1,5 +1,5 @@
 #!/bin/bash
-# Monta o Asa.app e o .dmg (Apple Silicon), sem empacotador: copia o
+# Monta o Asa Edit.app e o .dmg (Apple Silicon), sem empacotador: copia o
 # Electron.app, poe o codigo do Asa dentro, troca nome e icone, assina em modo
 # ad-hoc e monta a imagem. O mesmo caminho da Mesa de Playback (scripts/
 # montar-app.sh de la), que funciona no Mac do Pedro e no GitHub Actions.
@@ -7,9 +7,9 @@
 set -euo pipefail
 
 RAIZ="$(cd "$(dirname "$0")/.." && pwd)"
-NOME="Asa"
+NOME="Asa Edit"
 VERSAO="$(node -p "require('$RAIZ/package.json').version")"
-ID="br.pedro.asa"
+ID="br.pedro.asaedit"
 
 test -f "$RAIZ/app/ui-dist/index.html" || { echo "Falta a interface: rode npm run build:ui"; exit 1; }
 test -f "$RAIZ/build/icon.icns" || { echo "Falta build/icon.icns: rode python3 scripts/fazer-icone.py"; exit 1; }
@@ -37,7 +37,7 @@ $COPIAR "$RAIZ/app/ui-dist" "$REC/app/ui-dist"
 # package.json enxuto: so o que o Electron le (nome, versao, main).
 node -e "
 const p = require('$RAIZ/package.json');
-const fora = { name: p.name, productName: 'Asa', version: p.version, description: p.description, author: p.author, license: p.license, main: p.main };
+const fora = { name: p.name, productName: 'Asa Edit', version: p.version, description: p.description, author: p.author, license: p.license, main: p.main };
 require('fs').writeFileSync('$REC/package.json', JSON.stringify(fora, null, 2));
 "
 # A unica dependencia de producao: o ws.
@@ -56,7 +56,7 @@ PLIST="$MONTAGEM/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSAO" "$PLIST"
 /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $VERSAO" "$PLIST"
 # Pedido de rede local (macOS 15+): o Asa procura a mesa e recebe medidores.
-/usr/libexec/PlistBuddy -c "Add :NSLocalNetworkUsageDescription string 'O Asa conversa com a mesa WING e com os celulares dos músicos pela rede.'" "$PLIST" 2>/dev/null || true
+/usr/libexec/PlistBuddy -c "Add :NSLocalNetworkUsageDescription string 'O Asa Edit conversa com a mesa WING e com os celulares dos músicos pela rede.'" "$PLIST" 2>/dev/null || true
 
 echo "5/7  copia limpa do bundle"
 find "$MONTAGEM" -name ".DS_Store" -delete
@@ -83,7 +83,7 @@ echo "7/7  montando o .dmg"
 STAGE="$(mktemp -d)"
 $COPIAR "$APP" "$STAGE/$NOME.app"
 ln -s /Applications "$STAGE/Applications"
-DMG="$SAIDA/Asa $VERSAO.dmg"
+DMG="$SAIDA/Asa Edit $VERSAO.dmg"
 hdiutil create -volname "$NOME" -srcfolder "$STAGE" -ov -format UDZO "$DMG" >/dev/null
 rm -rf "$STAGE"
 echo

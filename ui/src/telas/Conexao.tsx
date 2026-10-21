@@ -13,7 +13,7 @@ export function Conexao({ progresso }: { progresso: number }) {
   const ocupado = e.estado === 'conectando' || e.estado === 'sincronizando';
   return (
     <main className="conexao">
-      <div className="conexao-marca"><img src="/icone-64.png" alt="" />Asa</div>
+      <div className="conexao-marca"><img src="/icone-64.png" alt="" />Asa Edit</div>
       <h1>Conectar à WING</h1>
       <p className="dica">O Mac precisa estar na mesma rede da mesa (cabo ou Wi-Fi).</p>
       {e.estado === 'conectando' && <p className="estado">Conectando em {e.ip}…</p>}
