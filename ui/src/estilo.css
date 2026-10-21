@@ -152,7 +152,7 @@ h3 { font-size: 0.8125rem; color: var(--apagado); font-weight: 500; }
 .tira-nome { font-weight: 600; font-size: 0.875rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; cursor: default; }
 .tira-nome.vazio { color: var(--apagado); font-weight: 500; }
 .tira-nome-campo { width: 100%; font-size: 0.875rem; padding: 0.1rem 0.25rem; min-height: 1.6rem; }
-.tira-fonte { margin: 0 0.3rem; padding: 0.15rem 0.25rem; min-height: 1.6rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 0 0.3rem; font-size: 0.75rem; color: var(--apagado); background: var(--trilho); border-color: transparent; }
+.tira-fonte { margin: 0 0.3rem; padding: 0.15rem 0.2rem; height: 1.6rem; min-height: 1.6rem; display: flex; flex-wrap: nowrap; align-items: center; justify-content: center; gap: 0 0.25rem; white-space: nowrap; overflow: hidden; font-size: 0.75rem; color: var(--apagado); background: var(--trilho); border-color: transparent; }
 .tira-fonte.vazia { background: transparent; }
 .tira-fonte .ganho { color: var(--texto); }
 .tira-fonte .ph { color: var(--mute); font-weight: 600; }

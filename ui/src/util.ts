@@ -190,12 +190,30 @@ export function caminhoFonte(grp: Valor | undefined, n: Valor | undefined) {
   return def(`${base}/name`) ? base : null;
 }
 
-/** "A 5", "L 3", "USB 12". Para os grupos estereo internos, "Bus 3 E". */
+/**
+ * Modo da fonte: 'M' (mono), 'ST' (estereo: esta entrada e a vizinha do par,
+ * 1-2, 3-4...) ou 'M/S'. Na WING o estereo fica na fonte, nao no canal.
+ */
+export function modoDaFonte(grp: Valor | undefined, n: Valor | undefined): string {
+  const c = caminhoFonte(grp, n);
+  return c ? String(valor(`${c}/mode`) ?? 'M') : 'M';
+}
+
+/** Primeira entrada do par estereo de n (1-2, 3-4...). */
+export function inicioDoPar(n: number) {
+  return n % 2 ? n : n - 1;
+}
+
+/** "A 5", "L 3", "USB 12"; par estereo "A 1–2". Internos: "Bus 3 E". */
 export function textoFonte(grp: Valor | undefined, n: Valor | undefined, longo = false) {
   const g = String(grp || 'OFF');
   if (g === 'OFF') return longo ? 'Nenhuma' : '–';
   const info = GRUPOS_FONTE[g] || { nome: g, curto: g };
   const num = Number(n) || 1;
+  if (!['BUS', 'MAIN', 'MTX', 'SEND', 'MON'].includes(g) && modoDaFonte(g, num) !== 'M') {
+    const a = inicioDoPar(num);
+    return `${longo ? info.nome : info.curto} ${a}–${a + 1}`;
+  }
   if (['BUS', 'MAIN', 'MTX', 'SEND', 'MON'].includes(g)) {
     // Estes vem em pares (esquerdo e direito): 1 = Bus 1 E, 2 = Bus 1 D.
     const k = Math.ceil(num / 2);

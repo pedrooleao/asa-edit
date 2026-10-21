@@ -5,16 +5,14 @@ import { indiceMedidor, useNumero, useValor } from '../store';
 import { mudarUi } from '../ui';
 import { corWing, lista, nomeDaTira, numeroCurto, partesDaTira, type TipoTira } from '../util';
 import { Medidor, MedidorReducao } from '../comp/Medidor';
-import { indicesMedidor } from '../comp/Tira';
+import { indicesMedidor, useEstereo } from '../comp/Tira';
 
 function Coluna({ prefixo }: { prefixo: string }) {
   const { tipo, n } = partesDaTira(prefixo);
   const nome = nomeDaTira(prefixo, useValor(`${prefixo}/name`));
   const cor = corWing(useValor(`${prefixo}/col`));
   const mute = useNumero(`${prefixo}/mute`);
-  const modo = useValor(tipo === 'ch' || tipo === 'aux' ? `${prefixo}/in/set/$mode` : null);
-  const mono = useValor(tipo === 'bus' || tipo === 'main' || tipo === 'mtx' ? `${prefixo}/busmono` : null);
-  const estereo = tipo === 'ch' || tipo === 'aux' ? modo === 'ST' || modo === 'M/S' : tipo !== 'dca' && !mono;
+  const estereo = useEstereo(prefixo);
   return (
     <button
       className={`col-medidor-g ${mute ? 'mutada' : ''}`}

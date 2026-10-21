@@ -12,7 +12,7 @@ import { Botao, CampoTexto, Deslizante, GradeDoModelo, Lista, ValorFader } from 
 import { Fader } from '../comp/Fader';
 import { EqGrafico, bandasDoEq } from '../comp/EqGrafico';
 import { MedidorReducao, Medidor } from '../comp/Medidor';
-import { SeletorFonte } from '../comp/Fonte';
+import { SeletorFonte, SeletorModo } from '../comp/Fonte';
 import { Icone } from '../comp/Icones';
 import { Inserts } from './Inserts';
 
@@ -142,6 +142,7 @@ function CartaoEntrada({ prefixo }: { prefixo: string }) {
   return (
     <Cartao titulo="Entrada" className="entrada">
       <SeletorFonte base={`${prefixo}/in/conn`} rotulo="Fonte" />
+      <SeletorModo base={`${prefixo}/in/conn`} />
       {fonte && def(`${fonte}/g`) ? (
         <>
           <Deslizante caminho={`${fonte}/g`} rotulo="Ganho" />

@@ -5,9 +5,26 @@
 import { memo, useState } from 'react';
 import { definir, indiceMedidor, useNumero, useTexto, useValor } from '../store';
 import { selecionar, useUi } from '../ui';
-import { caminhoFonte, corWing, FADER_MIN, lerTags, nomeDaTira, numeroCurto, partesDaTira, textoDb, textoFonte } from '../util';
+import { caminhoFonte, corWing, inicioDoPar, FADER_MIN, lerTags, nomeDaTira, numeroCurto, partesDaTira, textoDb, textoFonte } from '../util';
 import { Fader } from './Fader';
 import { Medidor, MedidorReducao } from './Medidor';
+
+/**
+ * A tira e' estereo? Canal/aux: pela fonte (par em ST ou M/S; a mesa tambem
+ * informa em in/set/$mode). Bus/main/matriz: estereo a nao ser em mono.
+ */
+export function useEstereo(prefixo: string) {
+  const { tipo } = partesDaTira(prefixo);
+  const entrada = tipo === 'ch' || tipo === 'aux';
+  const grp = useValor(entrada ? `${prefixo}/in/conn/grp` : null);
+  const n = useValor(entrada ? `${prefixo}/in/conn/in` : null);
+  const fonte = entrada ? caminhoFonte(grp, typeof n === 'number' ? inicioDoPar(n) : n) : null;
+  const modoFonte = useValor(fonte ? `${fonte}/mode` : null);
+  const modoCanal = useValor(entrada ? `${prefixo}/in/set/$mode` : null);
+  const mono = useValor(tipo === 'bus' || tipo === 'main' || tipo === 'mtx' ? `${prefixo}/busmono` : null);
+  if (entrada) return modoFonte === 'ST' || modoFonte === 'M/S' || modoCanal === 'ST' || modoCanal === 'M/S';
+  return tipo !== 'dca' && !mono;
+}
 
 export function indicesMedidor(prefixo: string, estereo: boolean) {
   const { tipo, n } = partesDaTira(prefixo);
@@ -52,8 +69,9 @@ function Fonte({ prefixo }: { prefixo: string }) {
   const fonte = caminhoFonte(grp, n);
   const ganho = useValor(fonte ? `${fonte}/g` : null);
   const ph = useValor(fonte ? `${fonte}/vph` : null);
+  useValor(fonte ? `${fonte}/mode` : null); // "A 1–2" quando vira par estereo
   return (
-    <button className="tira-fonte" onClick={() => selecionar(prefixo, true)} title="Fonte e ganho (abre o painel do canal)">
+    <button className="tira-fonte" onClick={() => selecionar(prefixo, true)} title={`${textoFonte(grp, n, true)}${typeof ganho === 'number' ? ` · ganho ${ganho > 0 ? '+' : ''}${Math.round(ganho * 2) / 2} dB` : ''}${ph ? ' · 48V' : ''} (abre o painel do canal)`}>
       <span>{textoFonte(grp, n)}</span>
       {typeof ganho === 'number' && <span className="ganho">{ganho > 0 ? '+' : ''}{Math.round(ganho * 2) / 2} dB</span>}
       {!!ph && <span className="ph" title="48V ligado">48V</span>}
@@ -117,9 +135,7 @@ export const Tira = memo(function Tira({ prefixo, larga = false }: Props) {
   const mute = useNumero(`${prefixo}/mute`);
   const muteEf = useNumero(`${prefixo}/$mute`);
   const solo = useNumero(`${prefixo}/$solo`);
-  const modo = useValor(tipo === 'ch' || tipo === 'aux' ? `${prefixo}/in/set/$mode` : null);
-  const mono = useValor(tipo === 'bus' || tipo === 'main' || tipo === 'mtx' ? `${prefixo}/busmono` : null);
-  const estereo = tipo === 'ch' || tipo === 'aux' ? modo === 'ST' || modo === 'M/S' : tipo !== 'dca' && !mono;
+  const estereo = useEstereo(prefixo);
   const temFonte = tipo === 'ch' || tipo === 'aux';
   const temPan = tipo !== 'dca';
   const nome = nomeDaTira(prefixo, useValor(`${prefixo}/name`));

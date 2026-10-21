@@ -194,7 +194,20 @@ function formaDe(d: Def, v: Valor) {
   return typeof v === 'string' ? 's' : 'f';
 }
 
-export function definir(caminho: string, v: Valor) {
+// Fonte em par estereo (/io/in/A/1/mode = ST nas duas entradas): o canal usa
+// as duas, entao ganho, 48V, fase e mute vao para as duas juntas.
+const AJUSTE_DE_FONTE = /^\/io\/in\/([^/$][^/]*)\/(\d+)\/(g|vph|pol|mute)$/;
+
+export function definir(caminho: string, v: Valor, espelhar = true) {
+  if (espelhar) {
+    const m = AJUSTE_DE_FONTE.exec(caminho);
+    if (m) {
+      const n = Number(m[2]);
+      const par = n % 2 ? n + 1 : n - 1;
+      const modo = valor(`/io/in/${m[1]}/${n}/mode`);
+      if (modo === 'ST' || modo === 'M/S') definir(`/io/in/${m[1]}/${par}/${m[3]}`, v, false);
+    }
+  }
   const d = porCaminho.get(caminho);
   if (!d || d.tipo === TIPO.NO) return;
   if (typeof v === 'number' && d.min !== null && d.max !== null && d.tipo !== TIPO.ENUM_FLOAT) {

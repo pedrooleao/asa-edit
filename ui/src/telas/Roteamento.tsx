@@ -6,7 +6,7 @@ import { useMemo, useState } from 'react';
 import { def, definir, indiceMedidor, useValor, useValores } from '../store';
 import { useUi, mudarUi } from '../ui';
 import { caminhoFonte, contarGrupo, corWing, GRUPOS_FONTE, lista, nomeDaFonteInterna, nomeDaTira, textoFonte } from '../util';
-import { SeletorFonte } from '../comp/Fonte';
+import { SeletorFonte, SeletorModo } from '../comp/Fonte';
 import { Botao, CampoTexto, Deslizante } from '../comp/Parametro';
 import { Medidor } from '../comp/Medidor';
 import { canalVazio } from './Retornos';
@@ -50,6 +50,7 @@ function LinhaEntrada({ prefixo }: { prefixo: string }) {
         <button className="link nome-canal" onClick={() => mudarUi({ tela: 'mixer', selecionado: prefixo, painelAberto: true, aba: 'canal' })} title="Abrir no mixer">{nome}</button>
       </td>
       <td><SeletorFonte base={`${prefixo}/in/conn`} compacto /></td>
+      <td><SeletorModo base={`${prefixo}/in/conn`} compacto /></td>
       <td>{fonte && def(`${fonte}/name`) ? <CampoTexto caminho={`${fonte}/name`} rotulo="" placeholder={textoFonte(grp, n, true)} /> : <span className="dica">–</span>}</td>
       <td className="col-ganho">{fonte && def(`${fonte}/g`) ? <Deslizante caminho={`${fonte}/g`} rotulo="" compacto /> : <span className="dica">–</span>}</td>
       <td>{fonte && def(`${fonte}/vph`) ? <Botao caminho={`${fonte}/vph`} rotulo="48V" tipo="alerta" /> : null}</td>
@@ -66,12 +67,12 @@ function Entradas() {
   return (
     <div className="rot-corpo">
       <div className="rot-barra">
-        <p className="dica">Fonte de cada canal. Ganho, 48V e polaridade ficam na fonte (no SD16 ou na mesa), não no canal.</p>
+        <p className="dica">Fonte de cada canal. Para usar duas entradas num fader só (bateria, teclado em L/R), escolha “Estéreo”. Ganho, 48V e fase ficam na fonte (no SD16 ou na mesa).</p>
         <label className="caixa"><input type="checkbox" checked={esconder} onChange={(e) => mudarUi({ esconderVazios: e.target.checked })} /> Esconder canais vazios</label>
       </div>
       <table className="tabela-rot">
         <thead>
-          <tr><th>Canal</th><th>Fonte</th><th>Nome da fonte</th><th>Ganho</th><th>48V</th><th>Fase</th><th>Sinal</th></tr>
+          <tr><th>Canal</th><th>Fonte</th><th>Canais</th><th>Nome da fonte</th><th>Ganho</th><th>48V</th><th>Fase</th><th>Sinal</th></tr>
         </thead>
         <tbody>
           {tiras.map((t) => <LinhaEntrada key={t} prefixo={t} />)}
