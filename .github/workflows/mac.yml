@@ -104,6 +104,18 @@ jobs:
           # A tag da versao acompanha o commit mais novo desta versao.
           git tag -f "v$versao"
           git push -f origin "refs/tags/v$versao"
+      # A release da versao e' reaproveitada a cada push: tira os .dmg que nao
+      # sao o desta montagem (ex.: um nome antigo), para nao baixarem o errado.
+      - name: Tirar .dmg antigos da release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          novo="$(basename "$(ls saida/*.dmg | head -1)" | tr ' ' '.')"
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' 2>/dev/null | while read -r nome; do
+            case "$nome" in
+              *.dmg) [ "$nome" = "$novo" ] || gh release delete-asset "$TAG" "$nome" --repo "$GITHUB_REPOSITORY" --yes ;;
+            esac
+          done
       - name: Publicar
         uses: softprops/action-gh-release@v2
         with:
