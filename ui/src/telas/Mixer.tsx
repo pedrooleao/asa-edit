@@ -9,6 +9,7 @@ import { Tira } from '../comp/Tira';
 import { Icone } from '../comp/Icones';
 import { PainelCanal } from './PainelCanal';
 import { EditorCamada } from './Camadas';
+import { useRolarDeLado } from '../comp/roda';
 
 export type DefCamada = { id: string; nome: string; tiras: string[]; atalhos?: { nome: string; alvo: string }[] };
 
@@ -94,6 +95,7 @@ export function Mixer() {
   const painelAberto = useUi('painelAberto');
   const lateral = useUi('lateralAberta');
   const area = useRef<HTMLDivElement>(null);
+  useRolarDeLado(area);
   const { geral } = useGeral();
   const [editor, setEditor] = useState<{ i: number | null } | null>(null);
   const indicePessoal = camada.id.startsWith('u:') ? Number(camada.id.slice(2)) : null;

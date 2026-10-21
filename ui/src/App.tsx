@@ -17,6 +17,7 @@ import { Monitor } from './telas/Monitor';
 import { Biblioteca } from './telas/Biblioteca';
 import { Configuracoes } from './telas/Configuracoes';
 import { Conexao } from './telas/Conexao';
+import { Confirmacao } from './comp/Confirmar';
 
 const TELAS: { id: Tela; nome: string; icone: string }[] = [
   { id: 'mixer', nome: 'Mixer', icone: 'mixer' },
@@ -66,6 +67,7 @@ function Principal() {
             <button onClick={() => enviar({ t: 'desconectar' })}>Escolher outra mesa</button>
           </div>
         )}
+        <Confirmacao />
         <main className="conteudo" {...((offline ? { inert: "" } : {}) as any)}>
           {tela === 'mixer' && <Mixer />}
           {tela === 'retornos' && <Retornos />}

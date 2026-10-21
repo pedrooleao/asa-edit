@@ -7,6 +7,9 @@ const path = require('path');
 const fs = require('fs');
 const { iniciarServidor } = require('./servidor');
 
+// Textos internos do Chromium (e do Electron) em portugues.
+app.commandLine.appendSwitch('lang', 'pt-BR');
+
 let janela = null;
 let servidor = null;
 let pronto = null;
@@ -61,7 +64,7 @@ function abrirJanela() {
     backgroundColor: '#17191d',
     title: 'Asa Edit',
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
-    trafficLightPosition: { x: 14, y: 14 },
+    trafficLightPosition: { x: 16, y: 16 },
     show: false,
     webPreferences: {
       contextIsolation: true,
@@ -73,32 +76,60 @@ function abrirJanela() {
   janela.once('ready-to-show', () => janela.show());
   janela.on('close', () => {
     try {
-      fs.writeFileSync(arqJanela(), JSON.stringify({ ...janela.getBounds(), zoom: janela.webContents.getZoomFactor() }));
+      fs.writeFileSync(arqJanela(), JSON.stringify(janela.getBounds()));
     } catch { /* sem disco */ }
   });
-  janela.webContents.on('did-finish-load', () => {
-    try {
-      const z = JSON.parse(fs.readFileSync(arqJanela(), 'utf8')).zoom;
-      if (z) janela.webContents.setZoomFactor(z);
-    } catch { /* padrao */ }
-  });
+  // O zoom e' da interface (guardado nela); o do Electron fica sempre em 100%.
+  janela.webContents.on('did-finish-load', () => janela.webContents.setZoomFactor(1));
   janela.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
     return { action: 'deny' };
   });
 }
 
+// Menus escritos em portugues: os papeis prontos do Electron (undo, minimize...)
+// vem com o texto em ingles, entao cada item ganha o seu rotulo.
+// O zoom do menu chama o zoom da propria interface (em rem), para os dois
+// nao se somarem; o atalho fica so na interface (registerAccelerator: false).
+function zoom(delta) {
+  if (!janela || janela.isDestroyed()) return;
+  janela.webContents.executeJavaScript(`window.asaZoom && window.asaZoom(${delta})`).catch(() => {});
+}
+
 function montarMenu() {
   const mac = process.platform === 'darwin';
+  const nome = 'Asa Edit';
   const template = [
-    ...(mac ? [{ role: 'appMenu', label: 'Asa Edit' }] : []),
-    { role: 'editMenu', label: 'Editar' },
+    ...(mac ? [{
+      label: nome,
+      submenu: [
+        { role: 'about', label: `Sobre o ${nome}` },
+        { type: 'separator' },
+        { role: 'hide', label: `Ocultar ${nome}` },
+        { role: 'hideOthers', label: 'Ocultar outros' },
+        { role: 'unhide', label: 'Mostrar tudo' },
+        { type: 'separator' },
+        { role: 'quit', label: `Sair do ${nome}` },
+      ],
+    }] : []),
+    {
+      label: 'Editar',
+      submenu: [
+        { role: 'undo', label: 'Desfazer' },
+        { role: 'redo', label: 'Refazer' },
+        { type: 'separator' },
+        { role: 'cut', label: 'Recortar' },
+        { role: 'copy', label: 'Copiar' },
+        { role: 'paste', label: 'Colar' },
+        { role: 'selectAll', label: 'Selecionar tudo' },
+      ],
+    },
     {
       label: 'Visualizar',
       submenu: [
-        { role: 'resetZoom', label: 'Tamanho normal' },
-        { role: 'zoomIn', label: 'Aumentar' },
-        { role: 'zoomOut', label: 'Diminuir' },
+        { label: 'Tamanho normal', accelerator: 'CmdOrCtrl+0', registerAccelerator: false, click: () => zoom(0) },
+        { label: 'Aumentar', accelerator: 'CmdOrCtrl+Plus', registerAccelerator: false, click: () => zoom(0.1) },
+        { label: 'Diminuir', accelerator: 'CmdOrCtrl+-', registerAccelerator: false, click: () => zoom(-0.1) },
         { type: 'separator' },
         { role: 'togglefullscreen', label: 'Tela cheia' },
         { type: 'separator' },
@@ -106,7 +137,14 @@ function montarMenu() {
         { role: 'toggleDevTools', label: 'Ferramentas de desenvolvedor' },
       ],
     },
-    { role: 'windowMenu', label: 'Janela' },
+    {
+      label: 'Janela',
+      submenu: [
+        { role: 'minimize', label: 'Minimizar' },
+        { role: 'zoom', label: 'Ampliar' },
+        ...(mac ? [{ type: 'separator' }, { role: 'front', label: 'Trazer tudo para a frente' }] : [{ role: 'close', label: 'Fechar' }]),
+      ],
+    },
   ];
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }

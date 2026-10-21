@@ -2,7 +2,7 @@
 // esquerda; os faders passam a ser os envios de cada canal para aquele bus
 // ("envios nos faders"). Do lado direito, o volume geral do bus.
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import qrcode from 'qrcode-generator';
 import { def, definir, enviar, indiceMedidor, useGeral, useNumero, useTexto, useValor, useValores, valor } from '../store';
 import { mudarUi, useFecharComEsc, useUi } from '../ui';
@@ -10,6 +10,8 @@ import { corWing, lista, nomeDaTira, partesDaTira, textoDb, FADER_MIN } from '..
 import { Fader } from '../comp/Fader';
 import { Medidor } from '../comp/Medidor';
 import { Icone } from '../comp/Icones';
+import { useRolarDeLado } from '../comp/roda';
+import { confirmar } from '../comp/Confirmar';
 
 const FONTES = [...lista('ch'), ...lista('aux')];
 const CAMINHOS_VAZIO = FONTES.flatMap((f) => [`${f}/name`, `${f}/in/conn/grp`]);
@@ -161,6 +163,8 @@ export function Retornos() {
   const bus = useUi('retornoBus');
   const esconder = useUi('esconderVazios');
   const [qr, setQr] = useState(false);
+  const areaTiras = useRef<HTMLDivElement>(null);
+  useRolarDeLado(areaTiras);
   const [copiarDe, setCopiarDe] = useState('');
   const [feito, setFeito] = useState('');
   const avisar = (t: string) => { setFeito(t); setTimeout(() => setFeito(''), 2500); };
@@ -201,12 +205,12 @@ export function Retornos() {
           <button className="primario com-icone" onClick={() => setQr(true)}><Icone nome="celular" tamanho={1.1} />Abrir no celular</button>
           <OuvirNosFones bus={bus} />
           <div className="retorno-acoes">
-            <select aria-label="Copiar a mix de outro músico" value={copiarDe} onChange={(e) => { setCopiarDe(''); const n = Number(e.target.value); if (n && confirm(`Copiar a mix de ${nomeDaTira(`/bus/${n}`)} para ${nome}? A mix atual será substituída.`)) copiar(n); }}>
+            <select aria-label="Copiar a mix de outro músico" value={copiarDe} onChange={(e) => { setCopiarDe(''); const n = Number(e.target.value); if (n) confirmar(`Copiar a mix de ${nomeDaTira(`/bus/${n}`)} para ${nome}? A mix atual será substituída.`, { sim: 'Copiar' }).then((ok) => { if (ok) copiar(n); }); }}>
               <option value="">Copiar de…</option>
               {Array.from({ length: 16 }, (_, i) => i + 1).filter((n) => n !== bus).map((n) => <option key={n} value={n}>{nomeDaTira(`/bus/${n}`)}</option>)}
             </select>
             {feito && <span className="feito" role="status"><Icone nome="check" tamanho={1} />{feito}</span>}
-            <button onClick={() => { if (confirm(`Zerar a mix de ${nome}? Todos os envios vão para −∞.`)) { lote(FONTES.filter((f) => def(`${f}/send/${bus}/lvl`)).map((f) => [`${f}/send/${bus}/lvl`, FADER_MIN])); avisar('Mix zerada'); } }}>Zerar mix</button>
+            <button onClick={async () => { if (await confirmar(`Zerar a mix de ${nome}? Todos os envios vão para −∞.`, { sim: 'Zerar', perigo: true })) { lote(FONTES.filter((f) => def(`${f}/send/${bus}/lvl`)).map((f) => [`${f}/send/${bus}/lvl`, FADER_MIN])); avisar('Mix zerada'); } }}>Zerar mix</button>
             <button onClick={() => { lote(FONTES.filter((f) => def(`${f}/send/${bus}/on`) && !canalVazio(f)).map((f) => [`${f}/send/${bus}/on`, 1])); avisar('Todos ligados'); }}>Ligar todos</button>
             <label className="caixa">
               <input type="checkbox" checked={esconder} onChange={(e) => mudarUi({ esconderVazios: e.target.checked })} />
@@ -215,7 +219,7 @@ export function Retornos() {
           </div>
         </header>
         <div className="retorno-corpo">
-          <div className="tiras">
+          <div className="tiras" ref={areaTiras}>
             {fontes.map((f) => <TiraEnvio key={f} fonte={f} bus={bus} />)}
           </div>
           <MestreBus bus={bus} />

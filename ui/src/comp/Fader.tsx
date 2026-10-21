@@ -4,6 +4,7 @@
 import { useEffect, useRef } from 'react';
 import { definir, useNumero } from '../store';
 import { faderParaPosicao, FADER_MIN, posicaoParaFader, textoDb } from '../util';
+import { ouvinteDeRoda } from './roda';
 
 type Props = {
   caminho: string;
@@ -34,17 +35,14 @@ export function Fader({ caminho, horizontal = false, rotulo, desligado = false, 
     definir(caminho, Math.min(10, novo));
   }
 
-  // Rolagem precisa de ouvinte nao-passivo para nao rolar a pagina junto.
+  // Rolagem: so no eixo do fader (ver roda.ts). Ouvinte nao-passivo para
+  // poder segurar a pagina quando o gesto e' para o fader.
   useEffect(() => {
     const el = ref.current!;
-    const roda = (ev: WheelEvent) => {
-      ev.preventDefault();
-      const d = Math.abs(ev.deltaY) > Math.abs(ev.deltaX) ? -ev.deltaY : ev.deltaX;
-      if (d) passo(d > 0 ? 0.5 : -0.5);
-    };
+    const roda = ouvinteDeRoda((dir) => passo(dir * 0.5), horizontal ? 'horizontal' : 'vertical');
     el.addEventListener('wheel', roda, { passive: false });
     return () => el.removeEventListener('wheel', roda);
-  }, [caminho]);
+  }, [caminho, horizontal]);
 
   function apertar(ev: React.PointerEvent) {
     if (ev.button !== 0) return;

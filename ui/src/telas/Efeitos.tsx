@@ -7,6 +7,7 @@ import { def, definir, folhasDe, useTexto, useValor, useValores } from '../store
 import { mudarUi } from '../ui';
 import { corWing, lista, limitar, nomeDaTira, numero } from '../util';
 import { Deslizante, GradeDoModelo } from '../comp/Parametro';
+import { confirmar } from '../comp/Confirmar';
 
 const CATEGORIAS: { nome: string; modelos: string[] }[] = [
   { nome: 'Reverbs', modelos: ['HALL', 'ROOM', 'CHAMBER', 'PLATE', 'CONCERT', 'AMBI', 'V-ROOM', 'V-REV', 'V-PLATE', 'BPLATE', 'VSS3', 'SHIMMER', 'SPRING', 'GATED', 'REVERSE', 'DEL/REV'] },
@@ -134,9 +135,10 @@ function DetalheFx({ n, usos }: { n: number; usos: { tira: string; slot: 'preins
         <select
           aria-label="Modelo do efeito"
           value={mdl}
-          onChange={(e) => {
-            if (mdl !== 'NONE' && !confirm(`Trocar o FX ${n} para ${nomeDoModelo(e.target.value)}? Os ajustes atuais deste FX se perdem.`)) return;
-            definir(`${base}/mdl`, e.target.value);
+          onChange={async (e) => {
+            const novo = e.target.value;
+            if (mdl !== 'NONE' && !(await confirmar(`Trocar o FX ${n} para ${nomeDoModelo(novo)}? Os ajustes atuais deste FX se perdem.`, { sim: 'Trocar' }))) return;
+            definir(`${base}/mdl`, novo);
           }}
         >
           <option value="NONE">Vazio</option>

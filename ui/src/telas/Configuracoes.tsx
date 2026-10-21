@@ -3,6 +3,7 @@
 import { enviar, useGeral, useTexto } from '../store';
 import { aplicarZoom, mudarUi, useUi } from '../ui';
 import { CampoTexto } from '../comp/Parametro';
+import { confirmar } from '../comp/Confirmar';
 
 const ACESSOS = [
   { id: 'retorno', nome: 'Só retornos', txt: 'Celulares na rede abrem só a mix escolhida (recomendado no culto).' },
@@ -39,7 +40,7 @@ export function Configuracoes() {
         <div className="linha-info">
           <strong>{e.info?.nome || 'WING'}</strong>
           <span className="dica">{modelo.replace('wing-', 'WING ').replace('compact', 'Compact')} · {e.ip} · firmware {firmware.split('-')[0]}</span>
-          <button onClick={() => { if (confirm('Desconectar da mesa? O Asa Edit volta para a tela de conexão.')) enviar({ t: 'desconectar' }); }}>Trocar de mesa</button>
+          <button onClick={async () => { if (await confirmar('Desconectar da mesa? O Asa Edit volta para a tela de conexão.', { sim: 'Desconectar' })) enviar({ t: 'desconectar' }); }}>Trocar de mesa</button>
         </div>
         <div style={{ maxWidth: '24rem', marginTop: '0.75rem' }}>
           <CampoTexto caminho="/$syscfg/consolename" rotulo="Nome da mesa" />

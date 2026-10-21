@@ -74,3 +74,13 @@ export function useFecharComEsc(fechar: () => void) {
     return () => window.removeEventListener('keydown', tecla, true);
   }, []);
 }
+
+// O menu Visualizar do app chama isto (0 = tamanho normal).
+(window as unknown as { asaZoom: (d: number) => void }).asaZoom = (d) => aplicarZoom(d === 0 ? 1 : estado.zoom + d);
+
+// Dentro do app de Mac a janela nao tem barra de titulo: os botoes de fechar,
+// minimizar e ampliar ficam por cima do canto da tela. A classe abre espaco
+// para eles e deixa a barra de cima arrastar a janela.
+if (/Electron/.test(navigator.userAgent) && /Mac/.test(navigator.platform)) {
+  document.documentElement.classList.add('janela-mac');
+}

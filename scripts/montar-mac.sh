@@ -55,6 +55,8 @@ PLIST="$MONTAGEM/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $ID" "$PLIST"
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSAO" "$PLIST"
 /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $VERSAO" "$PLIST"
+# Idioma principal do app: textos do sistema (Sobre, Servicos...) em portugues.
+/usr/libexec/PlistBuddy -c "Set :CFBundleDevelopmentRegion pt_BR" "$PLIST" 2>/dev/null || /usr/libexec/PlistBuddy -c "Add :CFBundleDevelopmentRegion string pt_BR" "$PLIST"
 # Pedido de rede local (macOS 15+): o Asa procura a mesa e recebe medidores.
 /usr/libexec/PlistBuddy -c "Add :NSLocalNetworkUsageDescription string 'O Asa Edit conversa com a mesa WING e com os celulares dos músicos pela rede.'" "$PLIST" 2>/dev/null || true
 

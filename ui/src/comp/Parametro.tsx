@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { def, definir, TIPO, useValor, type Def } from '../store';
 import { limitar, textoValor } from '../util';
 import { Fader } from './Fader';
+import { ouvinteDeRoda } from './roda';
 
 // Nomes em portugues para os parametros mais comuns (pelo fim do caminho).
 const NOMES: Record<string, string> = {
@@ -85,12 +86,10 @@ export function Deslizante({ caminho, rotulo, compacto = false }: { caminho: str
   useEffect(() => {
     const el = ref.current;
     if (!el || !d) return;
-    const roda = (ev: WheelEvent) => {
-      ev.preventDefault();
-      const dir = (Math.abs(ev.deltaY) > Math.abs(ev.deltaX) ? -ev.deltaY : ev.deltaX) > 0 ? 1 : -1;
+    const roda = ouvinteDeRoda((dir) => {
       const passos = d.passos && d.passos > 1 ? d.passos - 1 : 100;
       definir(caminho, dePos(d, paraPos(d, numRef.current) + dir / Math.min(passos, 200)));
-    };
+    }, 'horizontal');
     el.addEventListener('wheel', roda, { passive: false });
     return () => el.removeEventListener('wheel', roda);
   }, [caminho, d]);

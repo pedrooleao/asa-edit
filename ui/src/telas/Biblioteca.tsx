@@ -7,6 +7,7 @@ import { useUi } from '../ui';
 import { nomeDaTira, NOME_TIPO, partesDaTira } from '../util';
 import { Icone } from '../comp/Icones';
 import { ListaCamadas } from './Camadas';
+import { confirmar } from '../comp/Confirmar';
 
 function baixar(nome: string, texto: string) {
   const url = URL.createObjectURL(new Blob([texto], { type: 'application/json' }));
@@ -41,7 +42,7 @@ function Shows() {
     setErro('');
     const texto = await f.text();
     const nomeShow = f.name.replace(/\.(snap|json)$/i, '');
-    if (!confirm(`Abrir “${nomeShow}” na mesa? Tudo o que está na mesa agora (faders, nomes, EQ, envios, roteamento) será trocado pelo que está no arquivo.`)) return;
+    if (!(await confirmar(`Abrir “${nomeShow}” na mesa? Tudo o que está na mesa agora (faders, nomes, EQ, envios, roteamento) será trocado pelo que está no arquivo.`, { sim: 'Abrir na mesa', perigo: true }))) return;
     setCarga({ feito: 0, total: 1, nome: nomeShow });
     enviar({ t: 'abrirSnap', texto, nome: nomeShow, camadas, guardarComo: guardar ? nomeShow : undefined });
   }
@@ -63,11 +64,11 @@ function Shows() {
         </div>
       )}
       {erro && <p className="erro">{erro}</p>}
-      <form className="linha-info salvar-show" onSubmit={(e) => {
+      <form className="linha-info salvar-show" onSubmit={async (e) => {
         e.preventDefault();
         const n = nome.trim();
         if (!n) return;
-        if (shows.some((s) => s.nome === n) && !confirm(`Já existe um show “${n}”. Substituir?`)) return;
+        if (shows.some((s) => s.nome === n) && !(await confirmar(`Já existe um show “${n}”. Substituir?`, { sim: 'Substituir' }))) return;
         enviar({ t: 'salvarSnap', guardarComo: n });
         setAviso(`“${n}” salvo no Mac.`);
         setTimeout(() => setAviso(''), 3000);
@@ -84,9 +85,9 @@ function Shows() {
             <strong>{s.nome}</strong>
             <span className="dica">{dataCurta(s.data)}</span>
             <span className="acoes-linha">
-              <button onClick={() => { if (confirm(`Abrir “${s.nome}” na mesa? O estado atual da mesa será trocado.`)) { setCarga({ feito: 0, total: 1, nome: s.nome }); enviar({ t: 'abrirShow', nome: s.nome, camadas }); } }}>Abrir na mesa</button>
+              <button onClick={async () => { if (await confirmar(`Abrir “${s.nome}” na mesa? O estado atual da mesa será trocado.`, { sim: 'Abrir na mesa', perigo: true })) { setCarga({ feito: 0, total: 1, nome: s.nome }); enviar({ t: 'abrirShow', nome: s.nome, camadas }); } }}>Abrir na mesa</button>
               <button className="icone-so" aria-label={`Baixar ${s.nome}`} title="Baixar .snap" onClick={() => enviar({ t: 'baixarShow', nome: s.nome })}><Icone nome="baixar" tamanho={1} /></button>
-              <button className="icone-so" aria-label={`Apagar ${s.nome}`} title="Apagar" onClick={() => { if (confirm(`Apagar o show “${s.nome}” do Mac?`)) enviar({ t: 'apagarShow', nome: s.nome }); }}><Icone nome="lixo" tamanho={1} /></button>
+              <button className="icone-so" aria-label={`Apagar ${s.nome}`} title="Apagar" onClick={async () => { if (await confirmar(`Apagar o show “${s.nome}” do Mac?`, { sim: 'Apagar', perigo: true })) enviar({ t: 'apagarShow', nome: s.nome }); }}><Icone nome="lixo" tamanho={1} /></button>
             </span>
           </div>
         ))}
@@ -170,7 +171,7 @@ function Presets() {
                 setAplicado(p.nome);
                 setTimeout(() => setAplicado(''), 2500);
               }}>{aplicado === p.nome ? 'Aplicado!' : `Aplicar em ${nomeSel}`}</button>
-              <button className="icone-so" aria-label={`Apagar ${p.nome}`} onClick={() => { if (confirm(`Apagar o preset “${p.nome}”?`)) gravar(presets.filter((_, k) => k !== i)); }}><Icone nome="lixo" tamanho={1} /></button>
+              <button className="icone-so" aria-label={`Apagar ${p.nome}`} onClick={async () => { if (await confirmar(`Apagar o preset “${p.nome}”?`, { sim: 'Apagar', perigo: true })) gravar(presets.filter((_, k) => k !== i)); }}><Icone nome="lixo" tamanho={1} /></button>
             </span>
           </div>
         ))}

@@ -7,6 +7,7 @@ import { enviar, useGeral, useValor, type Camada } from '../store';
 import { mudarUi, useFecharComEsc } from '../ui';
 import { corWing, lista, nomeDaTira, numeroCurto, type TipoTira } from '../util';
 import { Icone } from '../comp/Icones';
+import { confirmar } from '../comp/Confirmar';
 
 const GRUPOS: { tipo: TipoTira; nome: string }[] = [
   { tipo: 'ch', nome: 'Canais' }, { tipo: 'aux', nome: 'Aux' }, { tipo: 'bus', nome: 'Buses' },
@@ -112,7 +113,7 @@ export function ListaCamadas() {
           <span className="acoes-linha">
             <button onClick={() => setEditando({ c, i })}>Editar</button>
             <button className="icone-so" aria-label="Subir" disabled={i === 0} onClick={() => { const l = [...camadas]; [l[i - 1], l[i]] = [l[i], l[i - 1]]; gravar(l); }}><Icone nome="voltar" tamanho={0.9} className="gira90" /></button>
-            <button className="icone-so" aria-label="Apagar" onClick={() => { if (confirm(`Apagar a camada “${c.nome}”?`)) gravar(camadas.filter((_, k) => k !== i)); }}><Icone nome="lixo" tamanho={1} /></button>
+            <button className="icone-so" aria-label="Apagar" onClick={async () => { if (await confirmar(`Apagar a camada “${c.nome}”?`, { sim: 'Apagar', perigo: true })) gravar(camadas.filter((_, k) => k !== i)); }}><Icone nome="lixo" tamanho={1} /></button>
           </span>
         </div>
       ))}

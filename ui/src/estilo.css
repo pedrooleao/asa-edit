@@ -131,7 +131,7 @@ h3 { font-size: 0.8125rem; color: var(--apagado); font-weight: 500; }
 .atalhos { display: flex; gap: 0.25rem; margin-left: auto; align-items: center; }
 .atalhos > button:not(.icone-so) { padding: 0.3rem 0.6rem; font-size: 0.8125rem; }
 .mixer-meio { flex: 1; display: flex; min-height: 0; }
-.tiras { flex: 1; display: flex; overflow-x: auto; overflow-y: hidden; min-width: 0; gap: 1px; background: var(--linha); scroll-behavior: smooth; }
+.tiras { flex: 1; display: flex; overflow-x: auto; overflow-y: hidden; min-width: 0; gap: 1px; background: var(--linha); overscroll-behavior-x: contain; }
 .vazio-camada { color: var(--apagado); padding: 2rem; background: var(--fundo); flex: 1; }
 
 .tira {
@@ -558,3 +558,19 @@ details[open] > summary { color: var(--texto); }
 @container (max-height: 10rem) {
   .fader-marcas span:not(.zero) { display: none; }
 }
+
+/* Pergunta de confirmacao */
+.modal.pequeno { width: min(28rem, 100%); gap: 1.25rem; padding: 1.25rem; }
+.pergunta { margin: 0; font-size: 1.0625rem; line-height: 1.45; }
+button.perigo { background: var(--mute-fundo); border-color: var(--mute-fundo); color: #fff; font-weight: 600; }
+
+/* App de Mac: espaco para os botoes da janela (fechar, minimizar, ampliar),
+   que ficam fixos no canto, em px (nao acompanham o zoom). A barra de cima e
+   o topo da lateral arrastam a janela. */
+.janela-mac .barra-lateral { padding-top: 44px; }
+.janela-mac .barra-lateral, .janela-mac .barra-topo { -webkit-app-region: drag; }
+.janela-mac .barra-lateral button, .janela-mac .barra-topo button, .janela-mac .barra-topo select,
+.janela-mac .barra-topo input, .janela-mac .barra-lateral .logo { -webkit-app-region: no-drag; }
+.janela-mac .conexao { padding-top: 32px; }
+.janela-mac .vazio, .janela-mac .conexao { -webkit-app-region: drag; }
+.janela-mac .conexao button, .janela-mac .conexao input, .janela-mac .conexao form { -webkit-app-region: no-drag; }
