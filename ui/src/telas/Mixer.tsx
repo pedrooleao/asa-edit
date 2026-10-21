@@ -1,13 +1,14 @@
 // Tela Mixer: camadas em abas, tiras que esticam na largura, main fixo a
 // direita, grupos (mute groups e DCAs) na lateral e o painel do canal embaixo.
 
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { definir, useGeral, useNumero, useValor } from '../store';
 import { mudarUi, selecionar, useUi } from '../ui';
 import { corWing, lista, nomeDaTira, type TipoTira } from '../util';
 import { Tira } from '../comp/Tira';
 import { Icone } from '../comp/Icones';
 import { PainelCanal } from './PainelCanal';
+import { EditorCamada } from './Camadas';
 
 export type DefCamada = { id: string; nome: string; tiras: string[]; atalhos?: { nome: string; alvo: string }[] };
 
@@ -93,6 +94,9 @@ export function Mixer() {
   const painelAberto = useUi('painelAberto');
   const lateral = useUi('lateralAberta');
   const area = useRef<HTMLDivElement>(null);
+  const { geral } = useGeral();
+  const [editor, setEditor] = useState<{ i: number | null } | null>(null);
+  const indicePessoal = camada.id.startsWith('u:') ? Number(camada.id.slice(2)) : null;
 
   function irPara(alvo: string) {
     const el = area.current?.querySelector(`[data-tira="${alvo}"]`) as HTMLElement | null;
@@ -108,10 +112,11 @@ export function Mixer() {
               {c.nome}
             </button>
           ))}
-          <button className="icone-so" title="Montar camadas" aria-label="Montar camadas" onClick={() => mudarUi({ tela: 'biblioteca' })}><Icone nome="mais" tamanho={1} /></button>
+          <button className="icone-so" title="Nova camada" aria-label="Nova camada" onClick={() => setEditor({ i: null })}><Icone nome="mais" tamanho={1} /></button>
         </nav>
         <div className="atalhos">
           {camada.atalhos?.map((a) => <button key={a.alvo} onClick={() => irPara(a.alvo)}>{a.nome}</button>)}
+          {indicePessoal !== null && <button className="com-icone" onClick={() => setEditor({ i: indicePessoal })}><Icone nome="editar" tamanho={1} />Editar camada</button>}
           <button className={`icone-so ${painelAberto ? 'ativo' : ''}`} title={painelAberto ? 'Esconder painel do canal' : 'Mostrar painel do canal'} aria-pressed={painelAberto} onClick={() => mudarUi({ painelAberto: !painelAberto })}><Icone nome="painel" /></button>
           <button className={`icone-so ${lateral ? 'ativo' : ''}`} title={lateral ? 'Esconder grupos' : 'Mostrar mute groups e DCAs'} aria-pressed={lateral} onClick={() => mudarUi({ lateralAberta: !lateral })}><Icone nome="lateral" /></button>
         </div>
@@ -125,6 +130,13 @@ export function Mixer() {
         <Lateral />
       </div>
       {painelAberto && <PainelCanal />}
+      {editor && (
+        <EditorCamada
+          inicial={editor.i === null ? { nome: '', tiras: [] } : (geral?.config.camadas || [])[editor.i] || { nome: '', tiras: [] }}
+          indice={editor.i}
+          fechar={() => setEditor(null)}
+        />
+      )}
     </div>
   );
 }

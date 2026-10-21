@@ -241,7 +241,7 @@ function ResumoComp({ prefixo }: { prefixo: string }) {
 function CartaoMains({ prefixo }: { prefixo: string }) {
   return (
     <Cartao titulo="Mains">
-      {[1, 2, 3, 4].map((m) => def(`${prefixo}/main/${m}/on`) && <LinhaEnvio key={m} base={`${prefixo}/main/${m}`} destino={`/main/${m}`} />)}
+      {[1, 2, 3, 4].map((m) => def(`${prefixo}/main/${m}/on`) && <LinhaEnvio key={m} base={`${prefixo}/main/${m}`} destino={`/main/${m}`} compacto />)}
     </Cartao>
   );
 }
@@ -464,7 +464,7 @@ function AbaDinamica({ prefixo, bloco }: { prefixo: string; bloco: 'gate' | 'dyn
 // ---------------------------------------------------------------------------
 // Aba Envios
 // ---------------------------------------------------------------------------
-function LinhaEnvio({ base, destino }: { base: string; destino: string }) {
+function LinhaEnvio({ base, destino, compacto = false }: { base: string; destino: string; compacto?: boolean }) {
   const on = useNumero(`${base}/on`);
   const nome = nomeDaTira(destino, useValor(`${destino}/name`));
   const cor = corWing(useValor(`${destino}/col`));
@@ -477,8 +477,8 @@ function LinhaEnvio({ base, destino }: { base: string; destino: string }) {
       </button>
       <Fader caminho={`${base}/lvl`} horizontal rotulo={`Envio para ${nome}`} desligado={!on} marcas={false} />
       <ValorFader caminho={`${base}/lvl`} />
-      {temModo && <Lista caminho={`${base}/mode`} sem />}
-      {!temModo && temPre && <Botao caminho={`${base}/pre`} rotulo="Pré" title="Antes do fader" />}
+      {!compacto && temModo && <Lista caminho={`${base}/mode`} sem />}
+      {!compacto && !temModo && temPre && <Botao caminho={`${base}/pre`} rotulo="Pré" title="Antes do fader" />}
     </div>
   );
 }

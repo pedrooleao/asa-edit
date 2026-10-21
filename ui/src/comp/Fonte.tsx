@@ -6,7 +6,7 @@ import { contarGrupo, GRUPOS_FONTE, nomeDaFonteInterna, nomeDaTira, caminhoFonte
 
 function nomeDaEntrada(grp: string, n: number) {
   const interna = nomeDaFonteInterna(grp, n);
-  if (interna) return `${nomeDaTira(interna)} ${n % 2 ? 'E' : 'D'}`;
+  if (interna) return valor(`${interna}/busmono`) ? (n % 2 ? nomeDaTira(interna) : `${nomeDaTira(interna)} D (sem uso)`) : `${nomeDaTira(interna)} ${n % 2 ? 'E' : 'D'}`;
   const c = caminhoFonte(grp, n);
   const nome = c ? String(valor(`${c}/name`) || '') : '';
   return nome;
