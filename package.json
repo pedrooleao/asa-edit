@@ -1,0 +1,33 @@
+{
+  "name": "asa",
+  "version": "0.1.0",
+  "description": "Asa: controle da Behringer WING (Compact) para Mac, com retornos pelo celular e roteamento visual",
+  "author": "Pedro",
+  "license": "MIT",
+  "main": "app/main/main.js",
+  "scripts": {
+    "servidor": "node app/main/servidor.js",
+    "ui": "vite --config ui/vite.config.ts",
+    "build:ui": "vite build --config ui/vite.config.ts",
+    "app": "npm run build:ui && electron .",
+    "testar:conexao": "node scripts/testar-conexao.js 127.0.0.1",
+    "esquema": "python3 scripts/gerar-esquema.py vendor/propmap.jsonl app/main/esquema.json.gz",
+    "mac": "npm run build:ui && electron-packager . Asa --platform=darwin --arch=arm64 --out=dist --overwrite --ignore='^/(ui|vendor|emulador|scripts|dist|docs)'"
+  },
+  "dependencies": {
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "@electron/packager": "^18.4.4",
+    "@fontsource/ibm-plex-sans-condensed": "^5.3.0",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.7.0",
+    "electron": "^33.4.11",
+    "qrcode-generator": "^1.5.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.9.3",
+    "vite": "^5.4.21"
+  }
+}
