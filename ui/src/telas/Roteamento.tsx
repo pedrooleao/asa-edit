@@ -116,9 +116,29 @@ export function useOQueToca(base: string) {
   return { nome: String(nomeFonte || '') || textoFonte(grp, n, true), cor: null, detalhe: textoFonte(grp, n, true) };
 }
 
+/**
+ * Lado E de um bus/main/matriz estereo numa saida: oferece por o lado D na
+ * saida seguinte (cada saida e' um conector so; o estereo usa duas).
+ */
+function useParDaSaida(grupo: string, n: number) {
+  const grp = String(useValor(`/io/out/${grupo}/${n}/grp`) ?? 'OFF');
+  const k = Number(useValor(`/io/out/${grupo}/${n}/in`) ?? 1);
+  const interna = ['BUS', 'MAIN', 'MTX'].includes(grp) ? nomeDaFonteInterna(grp, k) : null;
+  const mono = useValor(interna ? `${interna}/busmono` : null);
+  const proxGrp = useValor(`/io/out/${grupo}/${n + 1}/grp`);
+  const proxIn = useValor(`/io/out/${grupo}/${n + 1}/in`);
+  if (!interna || mono || k % 2 === 0 || n + 1 > contarGrupo('out', grupo)) return null;
+  if (proxGrp === grp && proxIn === k + 1) return null; // ja esta
+  return () => {
+    definir(`/io/out/${grupo}/${n + 1}/grp`, grp);
+    definir(`/io/out/${grupo}/${n + 1}/in`, k + 1);
+  };
+}
+
 function CartaoSaida({ grupo, n }: { grupo: string; n: number }) {
   const base = `/io/out/${grupo}/${n}`;
   const toca = useOQueToca(base);
+  const porD = useParDaSaida(grupo, n);
   return (
     <div className={`cartao-saida ${toca.nome === 'Nada' ? 'vazia' : ''}`} style={{ '--cor': toca.cor || 'var(--linha)' } as React.CSSProperties}>
       <div className="saida-cab">
@@ -126,6 +146,7 @@ function CartaoSaida({ grupo, n }: { grupo: string; n: number }) {
         <strong title={toca.detalhe}>{toca.nome}</strong>
       </div>
       <SeletorFonte base={base} compacto />
+      {porD && <button className="link par-d" onClick={porD}>Pôr o lado D na saída {n + 1}</button>}
     </div>
   );
 }
@@ -215,12 +236,22 @@ function AssistenteRetornos() {
             {Array.from({ length: 16 }, (_, i) => i + 1).map((b) => {
               const marcado = escolhidos.includes(b);
               return (
-                <label key={b} className="caixa linha-escolha" style={{ '--cor': corWing(vals[(b - 1) * 3 + 2]) } as React.CSSProperties}>
-                  <input type="checkbox" checked={marcado} onChange={() => setEscolhidos(marcado ? escolhidos.filter((x) => x !== b) : [...escolhidos, b].sort((x, y) => x - y))} />
-                  <span className="envio-cor" />
-                  {nomeDaTira(`/bus/${b}`, vals[(b - 1) * 3])}
-                  <span className="dica">{vals[(b - 1) * 3 + 1] ? 'mono' : 'estéreo'}</span>
-                </label>
+                <div key={b} className="linha-escolha" style={{ '--cor': corWing(vals[(b - 1) * 3 + 2]) } as React.CSSProperties}>
+                  <label className="caixa">
+                    <input type="checkbox" checked={marcado} onChange={() => setEscolhidos(marcado ? escolhidos.filter((x) => x !== b) : [...escolhidos, b].sort((x, y) => x - y))} />
+                    <span className="envio-cor" />
+                    {nomeDaTira(`/bus/${b}`, vals[(b - 1) * 3])}
+                  </label>
+                  <select
+                    className="modo-bus"
+                    aria-label={`Mono ou estéreo: ${nomeDaTira(`/bus/${b}`, vals[(b - 1) * 3])}`}
+                    value={vals[(b - 1) * 3 + 1] ? '1' : '0'}
+                    onChange={(ev) => definir(`/bus/${b}/busmono`, Number(ev.target.value))}
+                  >
+                    <option value="0">estéreo</option>
+                    <option value="1">mono</option>
+                  </select>
+                </div>
               );
             })}
           </div>

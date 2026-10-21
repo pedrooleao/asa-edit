@@ -456,7 +456,8 @@ details[open] > summary { color: var(--texto); }
 .assistente > p { margin-top: 0; }
 .assistente-grade { display: grid; grid-template-columns: minmax(16rem, 22rem) 1fr; gap: 1.5rem; margin-top: 1rem; align-items: start; }
 .lista-escolha { display: flex; flex-direction: column; gap: 0.15rem; margin-top: 0.4rem; }
-.linha-escolha { padding: 0.3rem 0.4rem; border-radius: var(--raio); color: var(--texto); }
+.linha-escolha { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0.4rem; border-radius: var(--raio); color: var(--texto); }
+.linha-escolha .caixa { color: var(--texto); flex: 1; }
 .linha-escolha:hover { background: var(--painel); }
 .linha-escolha .dica { margin-left: auto; }
 .previa { margin: 0.4rem 0 0.8rem; }
@@ -574,3 +575,6 @@ button.perigo { background: var(--mute-fundo); border-color: var(--mute-fundo); 
 .janela-mac .conexao { padding-top: 32px; }
 .janela-mac .vazio, .janela-mac .conexao { -webkit-app-region: drag; }
 .janela-mac .conexao button, .janela-mac .conexao input, .janela-mac .conexao form { -webkit-app-region: no-drag; }
+
+.par-d { align-self: flex-start; font-size: 0.8125rem; padding: 0; }
+.linha-escolha .modo-bus { margin-left: auto; min-height: 1.75rem; padding: 0.1rem 0.3rem; font-size: 0.8125rem; }
