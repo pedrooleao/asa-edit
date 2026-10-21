@@ -507,3 +507,34 @@ details[open] > summary { color: var(--texto); }
 .geq-trilho { flex: 1; width: 100%; position: relative; cursor: ns-resize; touch-action: none; border-radius: 0.2rem; background: #181b20; }
 .geq-barra { position: absolute; left: 25%; right: 25%; background: var(--selecao); border-radius: 0.15rem; }
 .geq-zero { position: absolute; left: 0; right: 0; height: 1px; background: var(--linha); }
+
+/* ------------------------------------------------------------------ monitor, medidores, biblioteca */
+.ouvindo { background: var(--solo); color: #1b1408; border-color: var(--solo); font-weight: 600; }
+.grade-monitor { display: grid; grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr)); gap: 0.75rem; margin-bottom: 0.75rem; align-items: start; }
+.grade-monitor .param { grid-template-columns: 7.5rem 1fr 5rem; }
+.grade-monitor .param.lista { grid-template-columns: 7.5rem 1fr; }
+.botao-falar { min-height: 3rem; font-size: 1.0625rem; font-weight: 600; touch-action: none; }
+.botao-falar.ligado { background: var(--mute); border-color: var(--mute); color: #fff; }
+.talk .chips { margin-bottom: 0.3rem; }
+.tela-medidores { flex: 1; overflow: auto; padding: 0.75rem 1rem 1rem; display: flex; flex-wrap: wrap; gap: 1rem 1.5rem; align-content: flex-start; }
+.grupo-medidores { display: flex; flex-direction: column; gap: 0.35rem; }
+.grupo-medidores.g-ch { flex-basis: 100%; }
+.fileira { display: flex; gap: 2px; height: 15rem; overflow-x: auto; }
+.col-medidor-g { min-width: 0; width: 2.6rem; display: flex; flex-direction: column; align-items: stretch; gap: 0.2rem; padding: 0 0 0.2rem; background: var(--painel); border: none; border-radius: 0.2rem; min-height: 0; overflow: hidden; }
+.g-ch .col-medidor-g { width: auto; flex: 1 0 1.9rem; max-width: 3rem; }
+.col-medidor-g .cor-topo { height: 0.3rem; background: var(--cor); flex: none; }
+.col-medidor-g .barras { flex: 1; display: flex; gap: 2px; justify-content: center; padding: 0 0.25rem; min-height: 0; }
+.col-medidor-g .medidor.v { width: 0.5rem; }
+.col-medidor-g .medidor.gr { width: 0.25rem; }
+.col-medidor-g .num { font-size: 0.75rem; color: var(--apagado); text-align: center; }
+.col-medidor-g .nome { font-size: 0.6875rem; color: var(--texto); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 0.1rem; }
+.col-medidor-g.mutada .barras { opacity: 0.45; }
+.col-medidor-g:hover { background: var(--elevado); }
+.legenda { flex-basis: 100%; }
+.secao.larga { max-width: 64rem; }
+.salvar-show { margin-top: 0.75rem; }
+.salvar-show input { min-width: 16rem; }
+.lista-shows { display: flex; flex-direction: column; gap: 0.3rem; margin-top: 0.75rem; }
+.ok-txt { color: var(--sinal); display: inline-flex; align-items: center; gap: 0.3rem; }
+.secao .estado { margin: 0.75rem 0; max-width: 30rem; }
+.secao .estado p { margin: 0 0 0.3rem; }

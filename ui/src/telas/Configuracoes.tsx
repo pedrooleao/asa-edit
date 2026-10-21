@@ -38,7 +38,7 @@ export function Configuracoes() {
         <h2>Mesa</h2>
         <div className="linha-info">
           <strong>{e.info?.nome || 'WING'}</strong>
-          <span className="dica">{modelo.replace('wing-', 'WING ')} · {e.ip} · firmware {firmware.split('-')[0]}</span>
+          <span className="dica">{modelo.replace('wing-', 'WING ').replace('compact', 'Compact')} · {e.ip} · firmware {firmware.split('-')[0]}</span>
           <button onClick={() => { if (confirm('Desconectar da mesa? O Asa volta para a tela de conexão.')) enviar({ t: 'desconectar' }); }}>Trocar de mesa</button>
         </div>
         <div style={{ maxWidth: '24rem', marginTop: '0.75rem' }}>

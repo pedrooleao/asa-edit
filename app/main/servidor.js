@@ -237,7 +237,11 @@ function iniciarServidor(o) {
         try { lido = lerSnap(esquema, m.texto); } catch (err) { mandar(cliente.ws, { t: 'snapErro', erro: err.message }); return; }
         if (wing.estado !== 'conectado') { mandar(cliente.ws, { t: 'snapErro', erro: 'Conecte na mesa antes de abrir um show' }); return; }
         try { fs.mkdirSync(o.pastaConfig, { recursive: true }); fs.writeFileSync(arqBase, JSON.stringify(lido.snap)); } catch { /* segue sem base */ }
-        if (m.camadas && lido.camadas.length) config.camadas = lido.camadas;
+        // Camadas da snap entram; as do Asa com outro nome continuam.
+        if (m.camadas && lido.camadas.length) {
+          const nomes = new Set(lido.camadas.map((c) => c.nome));
+          config.camadas = [...lido.camadas, ...(config.camadas || []).filter((c) => !nomes.has(c.nome))];
+        }
         if (m.guardarComo) guardarShow(m.guardarComo, lido.snap);
         salvarConfig();
         escreverAosPoucos(lido.itens, null, (feito, total) => todos({ t: 'carregando', feito, total, nome: m.nome || 'show' }));

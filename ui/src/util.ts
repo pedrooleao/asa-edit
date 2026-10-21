@@ -58,6 +58,8 @@ export function textoValor(d: Def | undefined, v: Valor | undefined): string {
   if (d.tipo === TIPO.FADER) return `${textoDb(v)} dB`;
   const u = UNIDADE[d.unidade] || '';
   if (u === 'Hz') return textoHz(v);
+  // Faixa invertida (dim, 40 a 0): e' quanto abaixa, sem sinal.
+  if (u === 'dB' && d.min !== null && d.max !== null && d.min > d.max) return `${numero(v, 0)} dB`;
   if (u === 'dB') return `${v > 0.04 ? '+' : ''}${numero(v, 1)} dB`;
   if (u === 'ms') return `${numero(v, v >= 100 ? 0 : 1)} ms`;
   if (u === '%') return `${Math.round(v)}%`;

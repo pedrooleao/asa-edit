@@ -26,7 +26,8 @@ const ITENS: Record<string, string> = {
   MONO: 'Mono', STEREO: 'Estéreo', 'MID/SIDE': 'Mid/side', METERS: 'Metros', FEET: 'Pés', MS: 'Milissegundos', SAMPLES: 'Amostras',
   TAP: 'Pré', POST: 'Pós', GROUP: 'Grupo', OFF: 'Desligado', ON: 'Ligado', COMP: 'Compressor', LIM: 'Limitador', NONE: 'Nenhum',
   'TILT EQ': 'Tilt EQ', MAXER: 'Maxer', 'AP 90': 'Passa-tudo 90°', 'AP 180': 'Passa-tudo 180°', BELL: 'Sino', SHELV: 'Prateleira',
-  LOW: 'Baixo', HIGH: 'Alto', 'TAP 3': 'Ponto 3', 'TAP 4': 'Ponto 4', 'TAP 5': 'Ponto 5',
+  LOW: 'Baixo', HIGH: 'Alto', PH: 'Fones', SPK: 'Alto-falantes', 'PH+SPK': 'Fones e alto-falantes', 'IN-PLACE': 'No lugar (muda o PA!)',
+  AUTO: 'Automático', PUSH: 'Segurar para falar', LATCH: 'Liga e desliga', LIVE: 'Ao vivo', STUDIO: 'Estúdio', 'TAP 3': 'Ponto 3', 'TAP 4': 'Ponto 4', 'TAP 5': 'Ponto 5',
 };
 
 export function textoItem(caminho: string, k: string | number, nome: string) {

@@ -495,4 +495,4 @@ function faderDeCru(f) {
   return Math.min(10, f * 40 - 30);
 }
 
-module.exports = { ConexaoWing, procurar, BLOCOS_MEDIDOR, PALAVRAS_TOTAL };
+module.exports = { ConexaoWing, procurar, BLOCOS_MEDIDOR, PALAVRAS_TOTAL, Leitor, tokenValor, escapar, deCru };

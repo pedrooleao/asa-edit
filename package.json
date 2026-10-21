@@ -12,7 +12,8 @@
     "app": "npm run build:ui && electron .",
     "testar:conexao": "node scripts/testar-conexao.js 127.0.0.1",
     "esquema": "python3 scripts/gerar-esquema.py vendor/propmap.jsonl app/main/esquema.json.gz",
-    "mac": "npm run build:ui && electron-packager . Asa --platform=darwin --arch=arm64 --out=dist --overwrite --ignore='^/(ui|vendor|emulador|scripts|dist|docs)'"
+    "mac": "npm run build:ui && electron-packager . Asa --platform=darwin --arch=arm64 --out=dist --overwrite --ignore='^/(ui|vendor|emulador|scripts|dist|docs)'",
+    "test": "node --test test/*.test.js"
   },
   "dependencies": {
     "ws": "^8.22.0"

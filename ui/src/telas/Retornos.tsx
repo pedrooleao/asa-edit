@@ -139,6 +139,23 @@ function JanelaCelular({ bus, fechar }: { bus: number; fechar: () => void }) {
   );
 }
 
+/** Poe a mix do musico nos fones do operador (e volta para o PA). */
+function OuvirNosFones({ bus }: { bus: number }) {
+  const src = useTexto('/cfg/mon/1/src');
+  const ouvindo = src === `BUS.${bus}`;
+  if (!def('/cfg/mon/1/src')) return null;
+  return (
+    <button
+      className={`com-icone ${ouvindo ? 'ouvindo' : ''}`}
+      aria-pressed={ouvindo}
+      onClick={() => definir('/cfg/mon/1/src', ouvindo ? 'MAIN.1' : `BUS.${bus}`)}
+      title={ouvindo ? 'Voltar a ouvir o PA nos fones' : 'Ouvir esta mix nos fones da mesa'}
+    >
+      <Icone nome="retornos" tamanho={1.1} />{ouvindo ? 'Ouvindo nos fones' : 'Ouvir nos fones'}
+    </button>
+  );
+}
+
 export function Retornos() {
   const bus = useUi('retornoBus');
   const esconder = useUi('esconderVazios');
@@ -178,6 +195,7 @@ export function Retornos() {
           <span className="painel-cor" />
           <h2>Mix de {nome}</h2>
           <button className="primario com-icone" onClick={() => setQr(true)}><Icone nome="celular" tamanho={1.1} />Abrir no celular</button>
+          <OuvirNosFones bus={bus} />
           <div className="retorno-acoes">
             <select aria-label="Copiar a mix de outro músico" value={copiarDe} onChange={(e) => { setCopiarDe(''); const n = Number(e.target.value); if (n && confirm(`Copiar a mix de ${nomeDaTira(`/bus/${n}`)} para ${nome}? A mix atual será substituída.`)) copiar(n); }}>
               <option value="">Copiar de…</option>
