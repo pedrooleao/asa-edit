@@ -358,7 +358,7 @@ class ConexaoWing extends EventEmitter {
    */
   sincronizar() {
     const ids = this.esquema.idsDeFolhas([
-      '/ch/', '/aux/', '/bus/', '/main/', '/mtx/', '/dca/', '/mgrp/', '/io/', '/$syscfg/', '/cfg/',
+      '/ch/', '/aux/', '/bus/', '/main/', '/mtx/', '/dca/', '/mgrp/', '/io/', '/$syscfg/', '/cfg/', '/fx/',
     ]);
     this.recebidos = 0;
     this.progresso = 0;

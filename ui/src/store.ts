@@ -1,7 +1,7 @@
 // Estado do app: esquema da mesa, valores atuais (por id), conexao e medidores.
 // Tudo chega pelo WebSocket do servidor local.
 
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 
 export const TIPO = { NO: 0, LINEAR: 1, LOG: 2, FADER: 3, INTEIRO: 4, ENUM: 5, ENUM_FLOAT: 6, TEXTO: 7 } as const;
 export const UNIDADE = ['', 'dB', '%', 'ms', 'Hz', 'm', 's', 'oct'];
@@ -20,12 +20,24 @@ export type Def = {
 
 export type Valor = number | string;
 
+/** Camada personalizada: lista de tiras ('/ch/5', '/bus/2', '/dca/1'...). */
+export type Camada = { nome: string; tiras: string[] };
+/** Preset de canal: valores relativos ao prefixo ('/eq/on' -> 1). */
+export type Preset = { nome: string; tipo: string; valores: [string, Valor][] };
+
 export type Mesa = { ip: string; nome: string; modelo: string; serie: string; firmware: string };
 
 export type Geral = {
   estado: { estado: 'desconectado' | 'conectando' | 'sincronizando' | 'conectado'; ip: string | null; info: any; progresso: number; erro?: string | null };
   achadas: Mesa[];
-  config: { acessoRede: 'desligado' | 'retorno' | 'completo'; ultimaMesa: string | null };
+  config: {
+    acessoRede: 'desligado' | 'retorno' | 'completo';
+    ultimaMesa: string | null;
+    camadas?: Camada[];
+    presets?: Preset[];
+    temBase?: boolean;
+  };
+  shows?: { nome: string; data: number }[];
   rede: { nome: string; ip: string }[];
   porta: number;
 };
@@ -56,12 +68,24 @@ export function def(caminho: string): Def | undefined {
 }
 
 /** Filhos diretos de um no' (pelo caminho), na ordem do esquema. */
+const cacheFilhos = new Map<string, Def[]>();
 export function filhos(caminho: string): Def[] {
   const pref = caminho.endsWith('/') ? caminho : caminho + '/';
+  const guardado = cacheFilhos.get(pref);
+  if (guardado) return guardado;
   const out: Def[] = [];
   for (const [c, d] of porCaminho) {
     if (c.startsWith(pref) && !c.slice(pref.length).includes('/')) out.push(d);
   }
+  if (esquemaPronto) cacheFilhos.set(pref, out);
+  return out;
+}
+
+/** Todas as folhas (nao nos) abaixo de um caminho, na ordem do esquema. */
+export function folhasDe(caminho: string): Def[] {
+  const pref = caminho.endsWith('/') ? caminho : caminho + '/';
+  const out: Def[] = [];
+  for (const [c, d] of porCaminho) if (c.startsWith(pref) && d.tipo !== TIPO.NO) out.push(d);
   return out;
 }
 
@@ -113,6 +137,44 @@ export function useValor(caminho: string | null | undefined): Valor | undefined 
       return () => ouvintes.get(id)?.delete(f);
     },
     () => (id === undefined ? undefined : valores.get(id)),
+  );
+}
+
+/** Numero de um caminho, com valor padrao enquanto a mesa nao respondeu. */
+export function useNumero(caminho: string | null | undefined, padrao = 0): number {
+  const v = useValor(caminho);
+  return typeof v === 'number' ? v : padrao;
+}
+
+export function useTexto(caminho: string | null | undefined, padrao = ''): string {
+  const v = useValor(caminho);
+  return v === undefined || v === null ? padrao : String(v);
+}
+
+/**
+ * Varios caminhos de uma vez (ex.: todos os solos). Re-renderiza so quando um
+ * deles muda. A lista de caminhos deve ser estavel (useMemo).
+ */
+export function useValores(caminhos: string[]): (Valor | undefined)[] {
+  const ids = caminhos.map((c) => porCaminho.get(c)?.id);
+  const chave = useRef<{ ids: (number | undefined)[]; lista: (Valor | undefined)[] } | null>(null);
+  const ler = () => {
+    const lista = ids.map((id) => (id === undefined ? undefined : valores.get(id)));
+    const ant = chave.current;
+    if (ant && ant.ids.length === ids.length && ant.ids.every((x, i) => x === ids[i]) && ant.lista.every((x, i) => x === lista[i])) return ant.lista;
+    chave.current = { ids, lista };
+    return lista;
+  };
+  return useSyncExternalStore(
+    (f) => {
+      for (const id of ids) {
+        if (id === undefined) continue;
+        if (!ouvintes.has(id)) ouvintes.set(id, new Set());
+        ouvintes.get(id)!.add(f);
+      }
+      return () => { for (const id of ids) if (id !== undefined) ouvintes.get(id)?.delete(f); };
+    },
+    ler,
   );
 }
 
@@ -193,6 +255,19 @@ let ligadoAoApp = false;
 const aoGeral = new Set<() => void>();
 function avisarGeral() { aoGeral.forEach((f) => f()); }
 
+// Mensagens que as telas querem ouvir (carregando show, arquivo pronto...).
+const aoMensagem = new Map<string, Set<(m: any) => void>>();
+export function useMensagem(tipo: string, f: (m: any) => void) {
+  const ref = useRef(f);
+  ref.current = f;
+  useEffect(() => {
+    const g = (m: any) => ref.current(m);
+    if (!aoMensagem.has(tipo)) aoMensagem.set(tipo, new Set());
+    aoMensagem.get(tipo)!.add(g);
+    return () => { aoMensagem.get(tipo)?.delete(g); };
+  }, [tipo]);
+}
+
 export function enviar(m: any) {
   if (ws && ws.readyState === 1) ws.send(JSON.stringify(m));
 }
@@ -214,6 +289,7 @@ export function conectarServidor() {
       case 'm': medidores = m.l; medidorNovo = true; break;
       default: break;
     }
+    aoMensagem.get(m.t)?.forEach((f) => f(m));
   };
   ws.onclose = () => {
     ligadoAoApp = false;

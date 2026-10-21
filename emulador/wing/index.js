@@ -479,7 +479,7 @@ function iniciarWing(o) {
     return no ? !!arvore.valor(no) : false;
   }
 
-  function palavrasDo(item, niveis, gr, saidas) {
+  function palavrasDo(item, niveis, gr, saidas, extra = {}) {
     const c = item.codigo;
     const i = item.indice;
     // Canal: entrada L/R, saida L/R, chave e ganho do gate, chave e ganho da
@@ -503,6 +503,14 @@ function iniciarWing(o) {
       if (c === 0xae) lista.push(0, 0, 0);
       return lista;
     }
+    if (c === 0xa2 && extra.buses) {
+      const b = extra.buses[i] || { pre: -Infinity, sai: -Infinity };
+      return [palavra(b.pre), palavra(b.pre), palavra(b.sai), palavra(b.sai), SILENCIO, 0, SILENCIO, 0];
+    }
+    if (c === 0xa5 && extra.dcas) {
+      const d = extra.dcas[i] ?? -Infinity;
+      return [palavra(d), palavra(d), palavra(d), palavra(d)];
+    }
     if (c === 0xa1 || c === 0xa2 || c === 0xa4) return [SILENCIO, SILENCIO, SILENCIO, SILENCIO, SILENCIO, 0, SILENCIO, 0];
     if (c >= 0xac && c <= 0xaf) return [SILENCIO, SILENCIO, SILENCIO, SILENCIO, SILENCIO, 0, SILENCIO, 0, 0, 0, 0];
     if (c === 0xa5) return [SILENCIO, SILENCIO, SILENCIO, SILENCIO];
@@ -510,6 +518,61 @@ function iniciarWing(o) {
     if (c === 0xa9) return [SILENCIO, SILENCIO, SILENCIO, SILENCIO, SILENCIO, SILENCIO];
     if (c === 0xaa) return new Array(120).fill(SILENCIO);
     return [SILENCIO];   // fonte (A7) e saida (A8): uma palavra por pedido
+  }
+
+  // MESA_SINAL_TESTE=1: sem o player tocando, os canais com nome recebem um
+  // sinal que sobe e desce (cada um no seu ritmo), e os buses e DCAs somam o
+  // que chega neles. So para testar apps contra o emulador; a mesa real mede.
+  const SINAL_TESTE = !!process.env.MESA_SINAL_TESTE;
+  function sinalDeTeste() {
+    const t = Date.now() / 1000;
+    const niveis = [];
+    const gr = [];
+    for (let n = 1; n <= 40; n++) {
+      const no = arvore.noPorLogico(`/ch/${n}/name`);
+      const nome = no ? arvore.valor(no) : '';
+      if (!nome && n > 16) { niveis.push(0); gr.push(1); continue; }
+      const onda = 0.5 + 0.5 * Math.sin(t * (1.3 + (n % 7) * 0.37) + n);
+      const batida = Math.max(0, Math.sin(t * (4 + (n % 3)) + n * 2)) ** 6;
+      const db = -38 + onda * 22 + batida * 10 - (n % 5) * 2;
+      niveis.push(Math.pow(10, db / 20));
+      gr.push(Math.pow(10, -Math.max(0, db + 22) * 0.5 / 20));
+    }
+    return { niveis, gr };
+  }
+  function lerNum(caminho, padrao) {
+    const no = arvore.noPorLogico(caminho);
+    const v = no ? arvore.valor(no) : undefined;
+    return typeof v === 'number' ? v : padrao;
+  }
+  function medidoresDeBus(niveis, saidas) {
+    const buses = [];
+    for (let b = 1; b <= 16; b++) {
+      let soma = 0;
+      for (let n = 1; n <= 40; n++) {
+        if (!lerNum(`/ch/${n}/send/${b}/on`, 0)) continue;
+        const lvl = lerNum(`/ch/${n}/send/${b}/lvl`, FADER_MIN);
+        if (lvl <= FADER_MIN) continue;
+        const no = arvore.noPorLogico(`/ch/${n}/send/${b}/mode`);
+        const pos = no && arvore.valor(no) === 'POST';
+        const base = pos ? saidas[n - 1] : emDb(niveis[n - 1] || 0);
+        if (isFinite(base)) soma += Math.pow(10, (base + lvl) / 10);
+      }
+      const pre = soma > 0 ? 10 * Math.log10(soma) : -Infinity;
+      const sai = mudo(`/bus/${b}/mute`) ? -Infinity : pre + faderDb(`/bus/${b}/fdr`);
+      buses.push({ pre, sai });
+    }
+    // DCA: o mais alto dos canais que tem a etiqueta #Dn.
+    const dcas = new Array(16).fill(-Infinity);
+    for (let n = 1; n <= 40; n++) {
+      const no = arvore.noPorLogico(`/ch/${n}/tags`);
+      const tags = no ? String(arvore.valor(no) || '') : '';
+      for (const m of tags.matchAll(/#D(\d+)/g)) {
+        const d = parseInt(m[1], 10) - 1;
+        if (d >= 0 && d < 16 && saidas[n - 1] > dcas[d]) dcas[d] = saidas[n - 1];
+      }
+    }
+    return { buses, dcas };
   }
 
   const relogioMedidor = setInterval(() => {
@@ -524,16 +587,16 @@ function iniciarWing(o) {
         }
         if (!m.porta || !m.itens.length) continue;
         if (!preparado) {
-          const { niveis, gr } = medidores();
+          const { niveis, gr } = SINAL_TESTE ? sinalDeTeste() : medidores();
           const saidas = [];
           for (let n = 1; n <= 40; n++) {
             const ent = emDb(niveis[n - 1] || 0);
             saidas.push(mudo(`/ch/${n}/mute`) ? -Infinity : ent + faderDb(`/ch/${n}/fdr`));
           }
-          preparado = { niveis, gr, saidas };
+          preparado = { niveis, gr, saidas, extra: SINAL_TESTE ? medidoresDeBus(niveis, saidas) : {} };
         }
         const palavras = [];
-        for (const item of m.itens) palavras.push(...palavrasDo(item, preparado.niveis, preparado.gr, preparado.saidas));
+        for (const item of m.itens) palavras.push(...palavrasDo(item, preparado.niveis, preparado.gr, preparado.saidas, preparado.extra));
         const b = Buffer.alloc(4 + palavras.length * 2);
         b.writeUInt32BE(id >>> 0, 0);
         palavras.forEach((p, k) => b.writeInt16BE(p, 4 + k * 2));

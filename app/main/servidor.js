@@ -13,6 +13,7 @@ const { WebSocketServer } = require('ws');
 
 const { Esquema, ARQUIVO } = require('./esquema');
 const { ConexaoWing, procurar } = require('./wing');
+const { lerSnap, escreverSnap } = require('./snap');
 
 const PASTA_UI = path.join(__dirname, '..', 'ui-dist');
 
@@ -52,7 +53,7 @@ function iniciarServidor(o) {
   const wing = new ConexaoWing(esquema);
   const arqConfig = path.join(o.pastaConfig, 'asa-config.json');
 
-  let config = { ultimaMesa: null, acessoRede: 'retorno', zoom: 1 };
+  let config = { ultimaMesa: null, acessoRede: 'retorno', zoom: 1, camadas: [], presets: [] };
   try { config = { ...config, ...JSON.parse(fs.readFileSync(arqConfig, 'utf8')) }; } catch { /* primeira vez */ }
   const salvarConfig = () => {
     try { fs.mkdirSync(o.pastaConfig, { recursive: true }); fs.writeFileSync(arqConfig, JSON.stringify(config, null, 2)); } catch { /* sem disco */ }
@@ -105,6 +106,8 @@ function iniciarServidor(o) {
 
   // --- WebSocket ----------------------------------------------------------
   const wss = new WebSocketServer({ server: servidor });
+  // O erro de porta ocupada ja e' tratado em ouvir(); sem isto o ws o repassa e derruba tudo.
+  wss.on('error', () => {});
 
   function mandar(ws, msg) {
     if (ws.readyState === 1) ws.send(typeof msg === 'string' ? msg : JSON.stringify(msg));
@@ -119,7 +122,14 @@ function iniciarServidor(o) {
       t: 'geral',
       estado,
       achadas,
-      config: { acessoRede: config.acessoRede, ultimaMesa: config.ultimaMesa },
+      config: {
+        acessoRede: config.acessoRede,
+        ultimaMesa: config.ultimaMesa,
+        camadas: config.camadas,
+        presets: config.presets,
+        temBase: fs.existsSync(arqBase),
+      },
+      shows: listarShows(),
       rede: ipsDaRede(),
       porta: servidor.address()?.port,
     };
@@ -190,12 +200,133 @@ function iniciarServidor(o) {
         wing.desconectar();
         return;
       case 'config':
-        if (['desligado', 'retorno', 'completo'].includes(m.acessoRede)) config.acessoRede = m.acessoRede;
+        if (['desligado', 'retorno', 'completo'].includes(m.acessoRede)) {
+          config.acessoRede = m.acessoRede;
+          // Quem ja estava conectado pela rede segue a regra nova.
+          for (const c of clientes) {
+            if (c.local) continue;
+            if (config.acessoRede === 'desligado') c.ws.close(4001, 'Acesso pela rede desligado');
+            else if (config.acessoRede === 'retorno' && c.papel !== 'retorno') c.ws.close(4002, 'So retornos');
+          }
+        }
         salvarConfig();
         todos(infoGeral());
         return;
+      case 'camadas':
+        if (!Array.isArray(m.lista)) return;
+        config.camadas = m.lista
+          .filter((c) => c && typeof c.nome === 'string' && Array.isArray(c.tiras))
+          .map((c) => ({ nome: c.nome.slice(0, 24), tiras: c.tiras.filter((t) => typeof t === 'string' && /^\/(ch|aux|bus|main|mtx|dca)\/\d+$/.test(t)) }));
+        salvarConfig();
+        todos(infoGeral());
+        return;
+      case 'presets':
+        if (!Array.isArray(m.lista)) return;
+        config.presets = m.lista.filter((p) => p && typeof p.nome === 'string' && Array.isArray(p.valores));
+        salvarConfig();
+        todos(infoGeral());
+        return;
+      case 'escreverLote':
+        // Varios valores de uma vez (aplicar preset, copiar mix): mesma regra do 'set'.
+        if (!Array.isArray(m.l)) return;
+        escreverAosPoucos(m.l.filter((x) => Array.isArray(x) && typeof x[0] === 'number').map(([id, v]) => ({ id, v, forma: esquema.formaDoId(id) })), cliente);
+        return;
+      case 'abrirSnap': {
+        // Arquivo .snap do WING Edit (ou salvo pelo Asa), escolhido no Mac.
+        let lido;
+        try { lido = lerSnap(esquema, m.texto); } catch (err) { mandar(cliente.ws, { t: 'snapErro', erro: err.message }); return; }
+        if (wing.estado !== 'conectado') { mandar(cliente.ws, { t: 'snapErro', erro: 'Conecte na mesa antes de abrir um show' }); return; }
+        try { fs.mkdirSync(o.pastaConfig, { recursive: true }); fs.writeFileSync(arqBase, JSON.stringify(lido.snap)); } catch { /* segue sem base */ }
+        if (m.camadas && lido.camadas.length) config.camadas = lido.camadas;
+        if (m.guardarComo) guardarShow(m.guardarComo, lido.snap);
+        salvarConfig();
+        escreverAosPoucos(lido.itens, null, (feito, total) => todos({ t: 'carregando', feito, total, nome: m.nome || 'show' }));
+        todos(infoGeral());
+        return;
+      }
+      case 'salvarSnap': {
+        const snap = snapAtual();
+        if (m.guardarComo) { guardarShow(m.guardarComo, snap); todos(infoGeral()); }
+        if (m.baixar) mandar(cliente.ws, { t: 'arquivo', nome: `${m.guardarComo || m.nome || 'Show'}.snap`, texto: JSON.stringify(snap, null, 2) });
+        return;
+      }
+      case 'abrirShow': {
+        const arq = arquivoDoShow(m.nome);
+        if (!arq || !fs.existsSync(arq)) return;
+        receber(cliente, { t: 'abrirSnap', texto: fs.readFileSync(arq, 'utf8'), nome: m.nome, camadas: m.camadas });
+        return;
+      }
+      case 'baixarShow': {
+        const arq = arquivoDoShow(m.nome);
+        if (!arq || !fs.existsSync(arq)) return;
+        mandar(cliente.ws, { t: 'arquivo', nome: `${m.nome}.snap`, texto: fs.readFileSync(arq, 'utf8') });
+        return;
+      }
+      case 'apagarShow': {
+        const arq = arquivoDoShow(m.nome);
+        if (arq) { try { fs.unlinkSync(arq); } catch { /* ja apagado */ } }
+        todos(infoGeral());
+        return;
+      }
       default:
     }
+  }
+
+  // --- Shows (snapshots) guardados no Mac ---------------------------------
+  const pastaShows = path.join(o.pastaConfig, 'shows');
+  const arqBase = path.join(o.pastaConfig, 'ultima-snap.json');
+  function arquivoDoShow(nome) {
+    if (typeof nome !== 'string') return null;
+    const limpo = nome.replace(/[\/\\:*?"<>|]/g, '').trim().slice(0, 60);
+    return limpo ? path.join(pastaShows, `${limpo}.snap`) : null;
+  }
+  function listarShows() {
+    try {
+      return fs.readdirSync(pastaShows)
+        .filter((f) => f.endsWith('.snap'))
+        .map((f) => ({ nome: f.slice(0, -5), data: fs.statSync(path.join(pastaShows, f)).mtimeMs }))
+        .sort((a, b) => b.data - a.data);
+    } catch { return []; }
+  }
+  function guardarShow(nome, snap) {
+    const arq = arquivoDoShow(nome);
+    if (!arq) return;
+    try { fs.mkdirSync(pastaShows, { recursive: true }); fs.writeFileSync(arq, JSON.stringify(snap, null, 2)); } catch { /* sem disco */ }
+  }
+  function snapAtual() {
+    let base = null;
+    try { base = JSON.parse(fs.readFileSync(arqBase, 'utf8')); } catch { /* sem base */ }
+    return escreverSnap(esquema, wing.valores, base, wing.info || {});
+  }
+
+  // Escreve muitos valores sem afogar a mesa: lotes pequenos, um atras do
+  // outro. Os outros clientes recebem cada valor (a mesa nao devolve).
+  let filaEscrita = [];
+  let escrevendo = null;
+  function escreverAosPoucos(itens, origem, aoProgresso) {
+    const total = itens.length;
+    let feito = 0;
+    filaEscrita.push(...itens.map((it) => ({ ...it, origem, aoProgresso, total, marca: () => ++feito })));
+    if (escrevendo) return;
+    const passo = () => {
+      if (!filaEscrita.length || (wing.estado !== 'conectado' && wing.estado !== 'sincronizando')) {
+        escrevendo = null;
+        filaEscrita = [];
+        return;
+      }
+      const lote = filaEscrita.splice(0, 120);
+      let ultimo = null;
+      for (const it of lote) {
+        if (it.origem && it.origem.papel === 'retorno' && (!it.origem.bus || !permitidosDoBus(it.origem.bus).has(it.id))) continue;
+        wing.definir(it.id, it.v, it.forma);
+        enfileirar(it.id, wing.valores.get(it.id), it.origem);
+        const n = it.marca();
+        if (it.aoProgresso) ultimo = [it.aoProgresso, n, it.total];
+      }
+      if (ultimo) ultimo[0](ultimo[1], ultimo[2]);
+      escrevendo = setTimeout(passo, 20);
+    };
+    escrevendo = setTimeout(passo, 0);
   }
 
   async function buscarMesas() {
