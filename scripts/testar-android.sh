@@ -22,5 +22,7 @@ if [ $ok != 1 ]; then
   sleep 8
 fi
 echo "--- logcat (Asa Edit e Node)"
-adb logcat -d -s AsaNode:* AsaEdit:* AndroidRuntime:E DEBUG:* libc:* | tail -150
+adb logcat -d -s AsaNode:* AsaEdit:* AndroidRuntime:E DEBUG:* libc:F | tail -150
+echo "--- falhas (pilha do crash)"
+adb logcat -d -b crash | head -80
 [ $ok = 1 ] || { echo "o APK nao funcionou"; exit 1; }
