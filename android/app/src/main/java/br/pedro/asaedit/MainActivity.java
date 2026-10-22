@@ -136,6 +136,11 @@ public class MainActivity extends Activity {
             Os.setenv("ASA_REDE", redesDoAparelho(), true);
             Os.setenv("HOME", getFilesDir().getAbsolutePath(), true);
             Os.setenv("TMPDIR", getCacheDir().getAbsolutePath(), true);
+            // Erros do Node num arquivo que da para ler pelo cabo USB (Android/data/...).
+            File pastaLog = getExternalFilesDir(null);
+            if (pastaLog == null) pastaLog = getFilesDir();
+            Os.setenv("ASA_LOG", new File(pastaLog, "node.log").getAbsolutePath(), true);
+            Log.i(ETIQUETA, "Subindo o Node: " + new File(projeto, "app/main/servidor.js"));
             String servidor = new File(projeto, "app/main/servidor.js").getAbsolutePath();
             int saida = iniciarNode(new String[] {"node", servidor});
             Log.e(ETIQUETA, "O Node terminou com o codigo " + saida);

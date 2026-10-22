@@ -383,14 +383,19 @@ function iniciarServidor(o) {
 
   // --- Subir --------------------------------------------------------------
   function ouvir(porta, tentativas = 10) {
-    servidor.once('error', (err) => {
+    const aoErro = (err) => {
+      servidor.off('listening', aoOuvir);
       if (err.code === 'EADDRINUSE' && tentativas > 0) ouvir(porta + 1, tentativas - 1);
       else eventos.emit('falhou', err);
-    });
-    servidor.listen(porta, '0.0.0.0', () => {
+    };
+    const aoOuvir = () => {
+      servidor.off('error', aoErro);
       const p = servidor.address().port;
       eventos.emit('pronto', { porta: p, url: `http://127.0.0.1:${p}/` });
-    });
+    };
+    servidor.once('error', aoErro);
+    servidor.once('listening', aoOuvir);
+    servidor.listen(porta, '0.0.0.0');
   }
   ouvir(o.porta || 8730);
 

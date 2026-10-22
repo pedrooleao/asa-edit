@@ -6,6 +6,7 @@
 #include <android/log.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -30,16 +31,27 @@ static void *repassar(void *arg) {
     return nullptr;
 }
 
+// stdout vai para o logcat. stderr (onde o Node escreve os erros) vai tambem
+// para um arquivo (ASA_LOG), escrito na hora: se o Node derrubar o app, o
+// motivo fica la, mesmo que o logcat nao tenha tido tempo de receber.
 static void redirecionarSaida() {
     setvbuf(stdout, nullptr, _IOLBF, 0);
-    setvbuf(stderr, nullptr, _IOLBF, 0);
+    setvbuf(stderr, nullptr, _IONBF, 0);
     pipe(canoSaida);
-    pipe(canoErro);
     dup2(canoSaida[1], STDOUT_FILENO);
-    dup2(canoErro[1], STDERR_FILENO);
-    pthread_t t1, t2;
+    pthread_t t1;
     if (pthread_create(&t1, nullptr, repassar, canoSaida) == 0) pthread_detach(t1);
-    if (pthread_create(&t2, nullptr, repassar, canoErro) == 0) pthread_detach(t2);
+    const char *arquivo = getenv("ASA_LOG");
+    int fd = arquivo ? open(arquivo, O_WRONLY | O_CREAT | O_TRUNC, 0644) : -1;
+    if (fd >= 0) {
+        dup2(fd, STDERR_FILENO);
+        close(fd);
+    } else {
+        pipe(canoErro);
+        dup2(canoErro[1], STDERR_FILENO);
+        pthread_t t2;
+        if (pthread_create(&t2, nullptr, repassar, canoErro) == 0) pthread_detach(t2);
+    }
 }
 
 extern "C" JNIEXPORT jint JNICALL
