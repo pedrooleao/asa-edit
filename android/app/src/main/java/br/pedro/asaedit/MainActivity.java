@@ -66,9 +66,6 @@ public class MainActivity extends Activity {
 
         web = new WebView(this);
         web.setBackgroundColor(0xFF17191D);
-        // No Android emulado (teste do GitHub) a GPU de mentira derruba a WebView:
-        // la desenha por software. Tablet de verdade usa a GPU.
-        if (emulado()) web.setLayerType(android.view.View.LAYER_TYPE_SOFTWARE, null);
         WebSettings c = web.getSettings();
         c.setJavaScriptEnabled(true);
         c.setDomStorageEnabled(true);
@@ -126,11 +123,6 @@ public class MainActivity extends Activity {
             new Thread(this::subirNode, "node").start();
         }
         esperarServidor();
-    }
-
-    private static boolean emulado() {
-        return Build.HARDWARE.contains("ranchu") || Build.HARDWARE.contains("goldfish")
-            || Build.PRODUCT.contains("sdk") || Build.FINGERPRINT.startsWith("generic");
     }
 
     // --- Node ------------------------------------------------------------

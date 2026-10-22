@@ -11,7 +11,7 @@ const os = require('os');
 const { EventEmitter } = require('events');
 const { WebSocketServer } = require('ws');
 
-const { Esquema, ARQUIVO } = require('./esquema');
+const { Esquema } = require('./esquema');
 const { ConexaoWing, procurar, interfacesIPv4 } = require('./wing');
 const { lerSnap, escreverSnap } = require('./snap');
 
@@ -80,7 +80,8 @@ function iniciarServidor(o) {
         'Content-Encoding': 'gzip',
         'Cache-Control': 'max-age=3600',
       });
-      fs.createReadStream(ARQUIVO).pipe(res);
+      // Ja compactado na memoria (no Android o arquivo perde o .gz do nome).
+      res.end(esquema.bruto);
       return;
     }
     let arquivo = path.normalize(path.join(PASTA_UI, decodeURIComponent(url.pathname)));
@@ -419,4 +420,7 @@ if (require.main === module) {
   const s = iniciarServidor({ pastaConfig: process.env.ASA_CONFIG || path.join(os.tmpdir(), 'asa') });
   s.on('pronto', (i) => console.log(`Asa Edit no ar: ${i.url}`));
   s.on('falhou', (e) => { console.error(e.message); process.exit(1); });
+  // No tablet o servidor e' o app inteiro: um erro solto vai para o log, mas
+  // nao derruba a mesa no meio do culto.
+  process.on('uncaughtException', (e) => console.error('Erro solto:', e && e.stack || e));
 }
