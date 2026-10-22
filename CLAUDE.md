@@ -93,7 +93,8 @@ android/               app Android: WebView + o mesmo servidor rodando no nodejs
 - Ganho do pré fica na **fonte** (`/io/in/LCL/5/g`), não no canal. O canal aponta a fonte por
   `/ch/N/in/conn/grp` + `/ch/N/in/conn/in`.
 - O emulador não reproduz tudo de uma mesa real (medidores de bus/matriz vêm em silêncio,
-  curvas são aproximadas). Antes de dizer que algo funciona, teste no emulador; o que
+  curvas são aproximadas). DCA e mute group ele aplica no som e nos medidores, pelas tags
+  do canal (`wing/ponte.js`, `montarFaderEMute`). Antes de dizer que algo funciona, teste no emulador; o que
   depende de comportamento real fica marcado como "confirmar na mesa" no PLANO.
 - Testes visuais: Playwright com Chromium contra `npm run servidor` + emulador.
 - Parâmetros com `$` no caminho são em geral só leitura (ex.: `/cfg/mon/1/$lvl`, o botão

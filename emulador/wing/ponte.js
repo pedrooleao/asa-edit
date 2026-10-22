@@ -42,6 +42,16 @@ const normQ = (n) => 10 * Math.pow(0.03, n);
 const relNorm = (ms) => limitar01(Math.log(Math.max(ms, 5) / 5) / Math.log(800));
 const normRel = (n) => 5 * Math.pow(800, n);
 
+// DCA e mute group da WING moram nas tags do canal: "#D1,#M2".
+function gruposDasTags(tags) {
+  const dcas = [];
+  const mgrps = [];
+  for (const m of String(tags || '').matchAll(/#([DM])(\d+)/g)) {
+    (m[1] === 'D' ? dcas : mgrps).push(parseInt(m[2], 10));
+  }
+  return { dcas, mgrps };
+}
+
 function ratioMaisPerto(r) {
   let melhor = 0;
   RATIOS_X32.forEach((x, i) => {
@@ -113,8 +123,7 @@ class Ponte {
       const w = `/ch/${n}`;
       const x = `/ch/${pad2(n)}`;
 
-      this.um(`${w}/fdr`, `${x}/mix/fader`, dbParaFader, faderParaDb);
-      this.um(`${w}/mute`, `${x}/mix/on`, inverso, inverso);
+      this.montarFaderEMute(w, x);
       this.um(`${w}/pan`, `${x}/mix/pan`, (p) => p / 200 + 0.5, (v) => (v - 0.5) * 200);
       this.um(`${w}/name`, `${x}/config/name`, igual, igual);
       this.um(`${w}/$solo`, `/-stat/solosw/${pad2(n)}`, igual, igual);
@@ -159,6 +168,57 @@ class Ponte {
     // $action, tratado a parte em wingEscreveu.
     this.um('/play/$actstate', '/-stat/tape/state', null,
       (v) => (v === 2 ? 'PLAY' : v === 1 ? 'PAUSE' : 'STOP'));
+  }
+
+  // O player so conhece o fader e o mute do canal. Na mesa o fader do DCA
+  // soma no do canal e o mute do DCA ou do mute group cala o canal; entao a
+  // ponte manda ao player o fader ja somado e o mute ja juntado. Na volta
+  // (Mixing Station mexeu), tira o DCA de novo para o fader da WING ficar certo.
+  montarFaderEMute(w, x) {
+    const fdrsDca = Array.from({ length: 16 }, (_, i) => `/dca/${i + 1}/fdr`);
+    const mutesDca = Array.from({ length: 16 }, (_, i) => `/dca/${i + 1}/mute`);
+    const mutesGrupo = Array.from({ length: 8 }, (_, i) => `/mgrp/${i + 1}/mute`);
+
+    this.ligar({
+      wing: [`${w}/fdr`, `${w}/tags`, ...fdrsDca],
+      x32: [`${x}/mix/fader`],
+      paraX32: (ler) => {
+        const db = ler(`${w}/fdr`) + this.somaDosDcas(w);
+        return [[`${x}/mix/fader`, isFinite(db) ? dbParaFader(db) : 0]];
+      },
+      daX32: (ler32) => {
+        const extra = this.somaDosDcas(w);
+        if (!isFinite(extra)) return [];   // DCA em -inf: o fader do canal nao da para saber
+        const db = faderParaDb(ler32(`${x}/mix/fader`));
+        return [[`${w}/fdr`, db <= -144 ? -144 : Math.max(-144, Math.min(10, db - extra))]];
+      },
+    });
+
+    this.ligar({
+      wing: [`${w}/mute`, `${w}/tags`, ...mutesDca, ...mutesGrupo],
+      x32: [`${x}/mix/on`],
+      paraX32: (ler) => [[`${x}/mix/on`, ler(`${w}/mute`) || this.mudoPorGrupo(w) ? 0 : 1]],
+      // Calado pelo grupo, o "off" do player nao e' o mute do canal.
+      daX32: (ler32) => (this.mudoPorGrupo(w) ? [] : [[`${w}/mute`, ler32(`${x}/mix/on`) ? 0 : 1]]),
+    });
+  }
+
+  /** Quanto os DCAs do canal somam no fader dele (dB; -Infinity se algum esta embaixo). */
+  somaDosDcas(w) {
+    let soma = 0;
+    for (const d of gruposDasTags(this.lerWing(`${w}/tags`)).dcas) {
+      const v = this.lerWing(`/dca/${d}/fdr`);
+      if (typeof v !== 'number') continue;
+      if (v <= -144) return -Infinity;
+      soma += v;
+    }
+    return soma;
+  }
+
+  /** O canal esta calado por um DCA ou mute group dele? */
+  mudoPorGrupo(w) {
+    const { dcas, mgrps } = gruposDasTags(this.lerWing(`${w}/tags`));
+    return dcas.some((d) => !!this.lerWing(`/dca/${d}/mute`)) || mgrps.some((m) => !!this.lerWing(`/mgrp/${m}/mute`));
   }
 
   montarEq(n, w, x) {
@@ -317,4 +377,4 @@ class Ponte {
   }
 }
 
-module.exports = { Ponte, dbParaFader, faderParaDb };
+module.exports = { Ponte, dbParaFader, faderParaDb, gruposDasTags };

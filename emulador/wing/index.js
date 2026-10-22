@@ -20,7 +20,7 @@ const {
   ArvoreWing, TIPO, FADER_MIN, normalizarValor, paraCru, deCru, textoDoValor, eFloat,
 } = require('./arvore');
 const P = require('./protocolo');
-const { Ponte } = require('./ponte');
+const { Ponte, gruposDasTags } = require('./ponte');
 
 const PORTA_NATIVA = 2222;
 const PORTA_OSC = 2223;
@@ -478,6 +478,27 @@ function iniciarWing(o) {
     const no = arvore.noPorLogico(caminho);
     return no ? !!arvore.valor(no) : false;
   }
+  function tagsDo(n) {
+    const no = arvore.noPorLogico(`/ch/${n}/tags`);
+    return gruposDasTags(no ? arvore.valor(no) : '');
+  }
+  // Saida do canal como na mesa: fader do canal mais os DCAs dele; calado pelo
+  // proprio mute, pelo mute de um DCA ou de um mute group.
+  function saidaDoCanal(n, ent) {
+    const { dcas, mgrps } = tagsDo(n);
+    if (mudo(`/ch/${n}/mute`) || dcas.some((d) => mudo(`/dca/${d}/mute`)) || mgrps.some((m) => mudo(`/mgrp/${m}/mute`))) return -Infinity;
+    return dcas.reduce((db, d) => db + faderDb(`/dca/${d}/fdr`), ent + faderDb(`/ch/${n}/fdr`));
+  }
+  // DCA: o mais alto dos canais dele, depois do fader (como o DCA da mesa em POST FDR).
+  function medidoresDeDca(saidas) {
+    const dcas = new Array(16).fill(-Infinity);
+    for (let n = 1; n <= 40; n++) {
+      for (const d of tagsDo(n).dcas) {
+        if (d >= 1 && d <= 16 && saidas[n - 1] > dcas[d - 1]) dcas[d - 1] = saidas[n - 1];
+      }
+    }
+    return dcas;
+  }
 
   function palavrasDo(item, niveis, gr, saidas, extra = {}) {
     const c = item.codigo;
@@ -562,17 +583,7 @@ function iniciarWing(o) {
       const sai = mudo(`/bus/${b}/mute`) ? -Infinity : pre + faderDb(`/bus/${b}/fdr`);
       buses.push({ pre, sai });
     }
-    // DCA: o mais alto dos canais que tem a etiqueta #Dn.
-    const dcas = new Array(16).fill(-Infinity);
-    for (let n = 1; n <= 40; n++) {
-      const no = arvore.noPorLogico(`/ch/${n}/tags`);
-      const tags = no ? String(arvore.valor(no) || '') : '';
-      for (const m of tags.matchAll(/#D(\d+)/g)) {
-        const d = parseInt(m[1], 10) - 1;
-        if (d >= 0 && d < 16 && saidas[n - 1] > dcas[d]) dcas[d] = saidas[n - 1];
-      }
-    }
-    return { buses, dcas };
+    return { buses };
   }
 
   const relogioMedidor = setInterval(() => {
@@ -591,9 +602,10 @@ function iniciarWing(o) {
           const saidas = [];
           for (let n = 1; n <= 40; n++) {
             const ent = emDb(niveis[n - 1] || 0);
-            saidas.push(mudo(`/ch/${n}/mute`) ? -Infinity : ent + faderDb(`/ch/${n}/fdr`));
+            saidas.push(saidaDoCanal(n, ent));
           }
-          preparado = { niveis, gr, saidas, extra: SINAL_TESTE ? medidoresDeBus(niveis, saidas) : {} };
+          const extra = { dcas: medidoresDeDca(saidas), ...(SINAL_TESTE ? medidoresDeBus(niveis, saidas) : {}) };
+          preparado = { niveis, gr, saidas, extra };
         }
         const palavras = [];
         for (const item of m.itens) palavras.push(...palavrasDo(item, preparado.niveis, preparado.gr, preparado.saidas, preparado.extra));
