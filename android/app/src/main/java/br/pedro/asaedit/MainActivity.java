@@ -139,13 +139,31 @@ public class MainActivity extends Activity {
             // Erros do Node num arquivo que da para ler pelo cabo USB (Android/data/...).
             File pastaLog = getExternalFilesDir(null);
             if (pastaLog == null) pastaLog = getFilesDir();
-            Os.setenv("ASA_LOG", new File(pastaLog, "node.log").getAbsolutePath(), true);
+            File log = new File(pastaLog, "node.log");
+            mostrarLogAnterior(log);
+            Os.setenv("ASA_LOG", log.getAbsolutePath(), true);
+            for (String f : new String[] {"app/main/servidor.js", "app/main/esquema.json.gz", "app/main/esquema.json",
+                    "app/ui-dist/index.html", "node_modules/ws/package.json"}) {
+                Log.i(ETIQUETA, f + (new File(projeto, f).exists() ? " ok" : " FALTANDO"));
+            }
             Log.i(ETIQUETA, "Subindo o Node: " + new File(projeto, "app/main/servidor.js"));
             String servidor = new File(projeto, "app/main/servidor.js").getAbsolutePath();
             int saida = iniciarNode(new String[] {"node", servidor});
             Log.e(ETIQUETA, "O Node terminou com o codigo " + saida);
         } catch (Exception e) {
             Log.e(ETIQUETA, "Nao consegui subir o Node", e);
+        }
+    }
+
+    /** Se o Node caiu da ultima vez, o motivo ficou no node.log: repassa ao logcat. */
+    private static void mostrarLogAnterior(File log) {
+        try {
+            if (!log.exists() || log.length() == 0) return;
+            String texto = new String(java.nio.file.Files.readAllBytes(log.toPath()), StandardCharsets.UTF_8);
+            if (texto.length() > 8000) texto = texto.substring(texto.length() - 8000);
+            for (String linha : texto.split("\n")) Log.w("AsaNode", "(antes) " + linha);
+        } catch (Exception e) {
+            Log.w(ETIQUETA, "Sem o node.log anterior", e);
         }
     }
 

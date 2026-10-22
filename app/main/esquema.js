@@ -11,9 +11,19 @@ const TIPO = { NO: 0, LINEAR: 1, LOG: 2, FADER: 3, INTEIRO: 4, ENUM: 5, ENUM_FLO
 
 const ARQUIVO = path.join(__dirname, 'esquema.json.gz');
 
+// O empacotador do Android pode tirar o .gz do nome (e ate descompactar):
+// aceita os dois jeitos.
+function lerArquivo(arquivo) {
+  const nomes = [arquivo, arquivo.replace(/\.gz$/, '')];
+  const achado = nomes.find((n) => fs.existsSync(n));
+  if (!achado) throw new Error(`esquema nao encontrado: ${arquivo}`);
+  const dados = fs.readFileSync(achado);
+  return dados[0] === 0x1f && dados[1] === 0x8b ? dados : zlib.gzipSync(dados);
+}
+
 class Esquema {
   constructor(arquivo = ARQUIVO) {
-    this.bruto = fs.readFileSync(arquivo);
+    this.bruto = lerArquivo(arquivo);
     const lista = JSON.parse(zlib.gunzipSync(this.bruto).toString('utf8'));
     this.porCaminho = new Map();
     this.porId = new Map();

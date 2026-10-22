@@ -14,8 +14,13 @@ ok=0
 # esse UDP entrar, entao aqui so o controle e' conferido.
 node scripts/teste-fumaca.js 10.0.2.2 8730 --sem-medidores && ok=1
 adb shell screencap -p /sdcard/tela.png && adb pull /sdcard/tela.png android-tela.png || true
-echo "--- erros do Node (node.log)"
-adb shell cat /sdcard/Android/data/br.pedro.asaedit/files/node.log 2>&1 | tail -60
+if [ $ok != 1 ]; then
+  # O app le o node.log da vez anterior ao abrir e repassa ao logcat.
+  echo "--- abrindo de novo para ver o erro da primeira vez"
+  adb shell am force-stop br.pedro.asaedit
+  adb shell am start -n br.pedro.asaedit/.MainActivity
+  sleep 8
+fi
 echo "--- logcat (Asa Edit e Node)"
 adb logcat -d -s AsaNode:* AsaEdit:* AndroidRuntime:E DEBUG:* libc:* | tail -150
 [ $ok = 1 ] || { echo "o APK nao funcionou"; exit 1; }
