@@ -105,3 +105,5 @@ android/               app Android: WebView + o mesmo servidor rodando no nodejs
   canal aponta a primeira. Estéreo de bus é do bus (`busmono`).
 - Android: o servidor roda no Node 18 do nodejs-mobile (nada de API do Node 20+), e no
   Android 11+ `os.networkInterfaces()` falha: use `interfacesIPv4()` (lê `ASA_REDE`).
+- Android: o empacotador tira o `.gz` do nome dos assets (`esquema.json.gz` vira
+  `esquema.json`). Não abra arquivos do app pelo nome com `.gz`; o esquema vai da memória.
