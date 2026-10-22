@@ -10,6 +10,13 @@ import { ListaCamadas } from './Camadas';
 import { confirmar } from '../comp/Confirmar';
 
 function baixar(nome: string, texto: string) {
+  // No app de Android a WebView nao baixa arquivos: o app salva em Downloads.
+  const android = (window as unknown as { AsaAndroid?: { salvarArquivo: (n: string, t: string) => string } }).AsaAndroid;
+  if (android) {
+    const onde = android.salvarArquivo(nome, texto);
+    if (onde) alertaSalvo(onde);
+    return;
+  }
   const url = URL.createObjectURL(new Blob([texto], { type: 'application/json' }));
   const a = document.createElement('a');
   a.href = url;
@@ -19,6 +26,8 @@ function baixar(nome: string, texto: string) {
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
+
+let alertaSalvo: (onde: string) => void = () => {};
 
 function dataCurta(ms: number) {
   return new Date(ms).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -36,6 +45,7 @@ function Shows() {
   useMensagem('carregando', (m) => setCarga(m.feito >= m.total ? null : m));
   useMensagem('snapErro', (m) => { setErro(m.erro); setCarga(null); });
   useMensagem('arquivo', (m) => baixar(m.nome, m.texto));
+  alertaSalvo = (onde) => { setAviso(`Salvo em ${onde}`); setTimeout(() => setAviso(''), 5000); };
   const shows = geral?.shows || [];
 
   async function abrirArquivo(f: File) {

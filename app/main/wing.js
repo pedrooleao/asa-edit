@@ -28,15 +28,39 @@ const RENOVA_MEDIDOR_MS = 2500;
 // Descoberta
 // ---------------------------------------------------------------------------
 
+/**
+ * Redes IPv4 deste aparelho: [{nome, ip, mascara}]. No Android 11+ o
+ * os.networkInterfaces() costuma falhar (o sistema fecha a lista de
+ * interfaces); la o app passa as redes em ASA_REDE (JSON) ao subir o Node.
+ */
+function interfacesIPv4() {
+  const lista = [];
+  try {
+    for (const [nome, ifs] of Object.entries(os.networkInterfaces())) {
+      for (const ni of ifs || []) {
+        if (ni.family === 'IPv4' && !ni.internal) lista.push({ nome, ip: ni.address, mascara: ni.netmask });
+      }
+    }
+  } catch { /* Android: segue com ASA_REDE */ }
+  if (!lista.length && process.env.ASA_REDE) {
+    try {
+      for (const r of JSON.parse(process.env.ASA_REDE)) {
+        const bits = Number(r.prefixo) || 24;
+        const m = [0, 1, 2, 3].map((i) => (0xffffffff << (32 - bits)) >>> (24 - i * 8) & 255).join('.');
+        lista.push({ nome: r.nome || 'wlan0', ip: r.ip, mascara: m });
+      }
+    } catch { /* sem rede conhecida */ }
+  }
+  return lista;
+}
+
 function enderecosDeBroadcast() {
   const lista = new Set(['255.255.255.255']);
-  for (const ifs of Object.values(os.networkInterfaces())) {
-    for (const ni of ifs || []) {
-      if (ni.family !== 'IPv4' || ni.internal || !ni.netmask) continue;
-      const a = ni.address.split('.').map(Number);
-      const m = ni.netmask.split('.').map(Number);
-      lista.add(a.map((x, i) => (x | (~m[i] & 255)) & 255).join('.'));
-    }
+  for (const ni of interfacesIPv4()) {
+    if (!ni.mascara) continue;
+    const a = ni.ip.split('.').map(Number);
+    const m = ni.mascara.split('.').map(Number);
+    lista.add(a.map((x, i) => (x | (~m[i] & 255)) & 255).join('.'));
   }
   return [...lista];
 }
@@ -495,4 +519,4 @@ function faderDeCru(f) {
   return Math.min(10, f * 40 - 30);
 }
 
-module.exports = { ConexaoWing, procurar, BLOCOS_MEDIDOR, PALAVRAS_TOTAL, Leitor, tokenValor, escapar, deCru };
+module.exports = { ConexaoWing, procurar, interfacesIPv4, BLOCOS_MEDIDOR, PALAVRAS_TOTAL, Leitor, tokenValor, escapar, deCru };

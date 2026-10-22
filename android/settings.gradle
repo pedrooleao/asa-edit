@@ -1,0 +1,18 @@
+// Projeto Android do Asa Edit: uma tela com a interface (WebView) e o mesmo
+// servidor do Mac rodando dentro do app (Node.js para Android, nodejs-mobile).
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+rootProject.name = 'AsaEdit'
+include ':app'

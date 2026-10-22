@@ -12,7 +12,7 @@ const { EventEmitter } = require('events');
 const { WebSocketServer } = require('ws');
 
 const { Esquema, ARQUIVO } = require('./esquema');
-const { ConexaoWing, procurar } = require('./wing');
+const { ConexaoWing, procurar, interfacesIPv4 } = require('./wing');
 const { lerSnap, escreverSnap } = require('./snap');
 
 const PASTA_UI = path.join(__dirname, '..', 'ui-dist');
@@ -29,13 +29,7 @@ const TIPOS_MIME = {
 };
 
 function ipsDaRede() {
-  const lista = [];
-  for (const [nome, ifs] of Object.entries(os.networkInterfaces())) {
-    for (const ni of ifs || []) {
-      if (ni.family === 'IPv4' && !ni.internal) lista.push({ nome, ip: ni.address });
-    }
-  }
-  return lista;
+  return interfacesIPv4().map((ni) => ({ nome: ni.nome, ip: ni.ip }));
 }
 
 function eLocal(endereco) {

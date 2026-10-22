@@ -31,6 +31,7 @@ node scripts/carregar-show-teste.js [arquivo.snap --subir]
 cd emulador && MESA_SINAL_TESTE=1 node server.js
 # gerar o .app e o .dmg (só no macOS); o GitHub Actions faz isso a cada push na main
 npm run mac
+# Android: o GitHub Actions monta o .apk (scripts/preparar-android.sh + gradle -p android)
 # teste rápido do protocolo contra o emulador ou uma mesa real
 npm run testar:conexao              # ou: node scripts/testar-conexao.js 192.168.1.62
 ```
@@ -54,8 +55,9 @@ ui/src/comp/           Fader, Medidor (canvas), Parametro (editor pelo esquema),
                        EqGrafico (biquads RBJ), Fonte, Icones
 ui/src/telas/          Mixer, PainelCanal, Inserts, Retornos, Celular, Roteamento, Camadas,
                        Efeitos, Medidores, Monitor, Biblioteca, Configuracoes, Conexao
-scripts/montar-mac.sh  .app + .dmg (assinatura ad-hoc); fazer-icone.py gera o ícone
-.github/workflows/     mac.yml: testes, .dmg, teste do app empacotado, release
+scripts/montar-mac.sh  .app + .dmg (assinatura ad-hoc); fazer-icone.py gera os ícones
+android/               app Android: WebView + o mesmo servidor rodando no nodejs-mobile
+.github/workflows/     instaladores.yml: testes, .dmg e .apk, teste de cada um, release
 ```
 
 - A interface **sempre** fala com o servidor por WebSocket, nunca com a mesa. Assim
@@ -99,3 +101,7 @@ scripts/montar-mac.sh  .app + .dmg (assinatura ad-hoc); fazer-icone.py gera o í
 - DCA e mute group de uma tira ficam em `/…/tags` como `#D1,#M2` (`lerTags`/`montarTags`).
 - Saídas de bus/main/matriz: `/io/out/A/n/grp = BUS`, `in` = 2·bus−1 (E) e 2·bus (D).
 - O repositório é público: não commitar a snap da igreja nem nada pessoal.
+- Estéreo de canal fica na **fonte**: `/io/in/A/1/mode = ST` nas duas entradas do par e o
+  canal aponta a primeira. Estéreo de bus é do bus (`busmono`).
+- Android: o servidor roda no Node 18 do nodejs-mobile (nada de API do Node 20+), e no
+  Android 11+ `os.networkInterfaces()` falha: use `interfacesIPv4()` (lê `ASA_REDE`).

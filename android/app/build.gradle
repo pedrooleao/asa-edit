@@ -1,0 +1,66 @@
+plugins {
+    id 'com.android.application'
+}
+
+// ABIs que o nodejs-mobile trouxe (app/libnode/bin/<abi>/libnode.so).
+def abisDoNode = file('libnode/bin').listFiles()?.findAll { it.isDirectory() }?.collect { it.name } ?: ['arm64-v8a']
+
+android {
+    namespace 'br.pedro.asaedit'
+    compileSdk 34
+    // O NDK que estiver instalado (no GitHub: ANDROID_NDK_VERSAO do workflow).
+    if (System.getenv('ANDROID_NDK_VERSAO')) ndkVersion System.getenv('ANDROID_NDK_VERSAO')
+
+    defaultConfig {
+        applicationId 'br.pedro.asaedit'
+        // Android 8 em diante: cobre os tablets dos ultimos anos.
+        minSdk 26
+        targetSdk 34
+        versionCode((project.findProperty('versaoCodigo') ?: '1') as int)
+        versionName(project.findProperty('versaoNome') ?: '0.0.0')
+        ndk { abiFilters(*abisDoNode) }
+        externalNativeBuild {
+            cmake { arguments '-DANDROID_STL=c++_shared' }
+        }
+    }
+
+    externalNativeBuild {
+        cmake { path 'src/main/cpp/CMakeLists.txt' }
+    }
+
+    sourceSets {
+        main { jniLibs.srcDirs = ['libnode/bin/'] }
+    }
+
+    // Sempre a mesma chave: assim um APK novo instala por cima do antigo.
+    // No GitHub, a chave pode vir do segredo ANDROID_KEYSTORE_BASE64; sem ele,
+    // usa a chave do repositorio (publica: serve para atualizar, nao para
+    // garantir quem montou o APK).
+    signingConfigs {
+        asa {
+            storeFile file(System.getenv('ASA_KEYSTORE') ?: 'asa-edit.keystore')
+            storePassword System.getenv('ASA_KEYSTORE_SENHA') ?: 'asaedit'
+            keyAlias System.getenv('ASA_KEY_ALIAS') ?: 'asaedit'
+            keyPassword System.getenv('ASA_KEYSTORE_SENHA') ?: 'asaedit'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.asa
+        }
+        debug {
+            signingConfig signingConfigs.asa
+        }
+    }
+
+    packagingOptions {
+        jniLibs { useLegacyPackaging true }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

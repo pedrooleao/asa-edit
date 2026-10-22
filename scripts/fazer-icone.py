@@ -66,4 +66,23 @@ if __name__ == '__main__':
     corte = im.crop((MARGEM, MARGEM, N - MARGEM, N - MARGEM))
     corte.resize((180, 180), Image.LANCZOS).save(publico / 'icone-180.png')
     corte.resize((64, 64), Image.LANCZOS).save(publico / 'icone-64.png')
-    print('build/icon.png, build/icon.icns e ui/public/icone-*.png prontos')
+    # Android: icone adaptativo (frente com o logo, fundo branco) e o comum,
+    # para Android 7 ou anterior. A frente tem 108 dp; o que aparece com
+    # certeza e' o circulo central de 66 dp, entao o logo ocupa ~58%.
+    res = RAIZ / 'android' / 'app' / 'src' / 'main' / 'res'
+    densidades = {'mdpi': 1, 'hdpi': 1.5, 'xhdpi': 2, 'xxhdpi': 3, 'xxxhdpi': 4}
+    for nome, k in densidades.items():
+        pasta = res / f'mipmap-{nome}'
+        pasta.mkdir(parents=True, exist_ok=True)
+        lado = round(108 * k)
+        frente = Image.new('RGBA', (lado, lado), (0, 0, 0, 0))
+        l = round(lado * 0.58)
+        lg = logo(l)
+        mascara = Image.new('L', lg.size, 0)
+        # So o que nao e' branco (o circulo azul e a asa dentro dele).
+        ImageDraw.Draw(mascara).ellipse([0, 0, l - 1, l - 1], fill=255)
+        frente.paste(lg, ((lado - l) // 2, (lado - l) // 2), mascara)
+        frente.save(pasta / 'ic_launcher_foreground.png')
+        comum = round(48 * k)
+        im.crop((MARGEM, MARGEM, N - MARGEM, N - MARGEM)).resize((comum, comum), Image.LANCZOS).save(pasta / 'ic_launcher.png')
+    print('build/icon.png, build/icon.icns, ui/public/icone-*.png e icones do Android prontos')
