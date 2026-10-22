@@ -15,7 +15,7 @@ export function Conexao({ progresso }: { progresso: number }) {
     <main className="conexao">
       <div className="conexao-marca"><img src="/icone-64.png" alt="" />Asa Edit</div>
       <h1>Conectar à WING</h1>
-      <p className="dica">O Mac precisa estar na mesma rede da mesa (cabo ou Wi-Fi).</p>
+      <p className="dica">O Asa Edit precisa estar na mesma rede da mesa (cabo ou Wi-Fi).</p>
       {e.estado === 'conectando' && <p className="estado">Conectando em {e.ip}…</p>}
       {e.estado === 'sincronizando' && (
         <div className="estado">
@@ -23,7 +23,7 @@ export function Conexao({ progresso }: { progresso: number }) {
           <div className="barra-progresso"><div style={{ width: `${progresso * 100}%` }} /></div>
         </div>
       )}
-      {e.estado === 'desconectado' && e.erro && <p className="erro">{e.erro}. Confira se o Mac está na mesma rede da mesa.</p>}
+      {e.estado === 'desconectado' && e.erro && <p className="erro">{e.erro}. Confira se o Asa Edit está na mesma rede da mesa.</p>}
       <h2>Mesas na rede</h2>
       <ul className="mesas">
         {geral!.achadas.map((m) => (

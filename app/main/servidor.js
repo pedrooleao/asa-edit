@@ -8,6 +8,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const crypto = require('crypto');
 const { EventEmitter } = require('events');
 const { WebSocketServer } = require('ws');
 
@@ -36,6 +37,11 @@ function eLocal(endereco) {
   return /^(127\.|::1$|::ffff:127\.)/.test(endereco || '');
 }
 
+// Senha do tecnico e aparelhos autorizados. A senha fica so como hash; cada
+// aparelho recebe uma chave longa e o servidor guarda so o hash dela.
+const hashSenha = (senha, sal) => crypto.scryptSync(String(senha), sal, 32).toString('hex');
+const hashChave = (chave) => crypto.createHash('sha256').update(String(chave)).digest('hex');
+
 /**
  * @param {object} o
  * @param {string} o.pastaConfig  onde guardar a configuracao
@@ -47,11 +53,24 @@ function iniciarServidor(o) {
   const wing = new ConexaoWing(esquema);
   const arqConfig = path.join(o.pastaConfig, 'asa-config.json');
 
-  let config = { ultimaMesa: null, acessoRede: 'retorno', zoom: 1, camadas: [], presets: [] };
+  let config = { ultimaMesa: null, acessoRede: 'retorno', zoom: 1, camadas: [], presets: [], senha: null, aparelhos: [] };
   try { config = { ...config, ...JSON.parse(fs.readFileSync(arqConfig, 'utf8')) }; } catch { /* primeira vez */ }
   const salvarConfig = () => {
     try { fs.mkdirSync(o.pastaConfig, { recursive: true }); fs.writeFileSync(arqConfig, JSON.stringify(config, null, 2)); } catch { /* sem disco */ }
   };
+  if (!Array.isArray(config.aparelhos)) config.aparelhos = [];
+
+  function definirSenha(senha) {
+    const sal = crypto.randomBytes(16).toString('hex');
+    config.senha = { sal, hash: hashSenha(senha, sal) };
+  }
+  // Num servidor sem tela (Raspberry Pi) a primeira senha vem do ambiente.
+  if (!config.senha && process.env.ASA_SENHA) { definirSenha(process.env.ASA_SENHA); salvarConfig(); }
+  const senhaCerta = (senha) => !!config.senha && typeof senha === 'string'
+    && crypto.timingSafeEqual(Buffer.from(hashSenha(senha, config.senha.sal), 'hex'), Buffer.from(config.senha.hash, 'hex'));
+  const aparelhoDaChave = (chave) => (chave ? config.aparelhos.find((a) => a.hash === hashChave(chave)) : null);
+  // Senha errada demais vinda do mesmo endereco: espera um pouco.
+  const erros = new Map();
 
   let estado = { estado: 'desconectado', ip: null, info: null, progresso: 0 };
   let achadas = [];
@@ -119,6 +138,8 @@ function iniciarServidor(o) {
       achadas,
       config: {
         acessoRede: config.acessoRede,
+        temSenha: !!config.senha,
+        aparelhos: config.aparelhos.map((a) => ({ id: a.id, nome: a.nome, criado: a.criado, visto: a.visto })),
         ultimaMesa: config.ultimaMesa,
         camadas: config.camadas,
         presets: config.presets,
@@ -134,16 +155,20 @@ function iniciarServidor(o) {
     const local = eLocal(req.socket.remoteAddress);
     const url = new URL(req.url, 'http://x');
     const bus = parseInt(url.searchParams.get('retorno') || '', 10);
+    // Aparelho do tecnico (entrou uma vez com a senha): controle completo de
+    // qualquer lugar da rede, mesmo com o acesso pela rede em "so retornos".
+    const aparelho = local ? null : aparelhoDaChave(url.searchParams.get('chave'));
     let papel = 'completo';
-    if (!local) {
+    if (!local && !aparelho) {
       if (config.acessoRede === 'desligado') { ws.close(4001, 'Acesso pela rede desligado'); return; }
       if (config.acessoRede === 'retorno' || bus) papel = 'retorno';
     } else if (bus) {
       papel = 'retorno';
     }
-    const cliente = { ws, papel, bus: bus >= 1 && bus <= 16 ? bus : null, local };
+    if (aparelho) { aparelho.visto = Date.now(); salvarConfig(); }
+    const cliente = { ws, papel, bus: bus >= 1 && bus <= 16 ? bus : null, local, aparelho: aparelho ? aparelho.id : null, ip: req.socket.remoteAddress };
     clientes.add(cliente);
-    mandar(ws, { t: 'ola', papel, bus: cliente.bus, local });
+    mandar(ws, { t: 'ola', papel, bus: cliente.bus, local, aparelho: cliente.aparelho });
     mandar(ws, infoGeral());
     if (wing.valores.size) mandar(ws, { t: 'tudo', l: [...wing.valores] });
 
@@ -175,6 +200,28 @@ function iniciarServidor(o) {
         cliente.bus = n >= 1 && n <= 16 ? n : null;
         return;
       }
+      case 'entrar': {
+        // Celular virando aparelho do tecnico: senha certa ganha uma chave.
+        const agora = Date.now();
+        const e = erros.get(cliente.ip) || { n: 0, ate: 0 };
+        if (e.ate > agora) { mandar(cliente.ws, { t: 'entrar', ok: false, motivo: 'espere' }); return; }
+        if (!config.senha) { mandar(cliente.ws, { t: 'entrar', ok: false, motivo: 'semSenha' }); return; }
+        if (!senhaCerta(m.senha)) {
+          e.n += 1;
+          if (e.n >= 5) { e.n = 0; e.ate = agora + 60000; }
+          erros.set(cliente.ip, e);
+          mandar(cliente.ws, { t: 'entrar', ok: false, motivo: e.ate > agora ? 'espere' : 'errada' });
+          return;
+        }
+        erros.delete(cliente.ip);
+        const chave = crypto.randomBytes(24).toString('base64url');
+        const nome = typeof m.nome === 'string' && m.nome.trim() ? m.nome.trim().slice(0, 32) : 'Aparelho';
+        config.aparelhos.push({ id: crypto.randomBytes(6).toString('hex'), nome, hash: hashChave(chave), criado: agora, visto: agora });
+        salvarConfig();
+        mandar(cliente.ws, { t: 'entrar', ok: true, chave });
+        todos(infoGeral());
+        return;
+      }
       default:
         break;
     }
@@ -199,7 +246,7 @@ function iniciarServidor(o) {
           config.acessoRede = m.acessoRede;
           // Quem ja estava conectado pela rede segue a regra nova.
           for (const c of clientes) {
-            if (c.local) continue;
+            if (c.local || c.aparelho) continue;
             if (config.acessoRede === 'desligado') c.ws.close(4001, 'Acesso pela rede desligado');
             else if (config.acessoRede === 'retorno' && c.papel !== 'retorno') c.ws.close(4002, 'So retornos');
           }
@@ -207,6 +254,23 @@ function iniciarServidor(o) {
         salvarConfig();
         todos(infoGeral());
         return;
+      case 'senhaTecnico': {
+        const senha = typeof m.senha === 'string' ? m.senha.trim() : '';
+        if (senha.length < 4 || senha.length > 32) return;
+        definirSenha(senha);
+        salvarConfig();
+        todos(infoGeral());
+        return;
+      }
+      case 'tirarAparelho': {
+        const antes = config.aparelhos.length;
+        config.aparelhos = config.aparelhos.filter((a) => a.id !== m.id);
+        if (config.aparelhos.length === antes) return;
+        salvarConfig();
+        for (const c of clientes) if (c.aparelho === m.id) c.ws.close(4003, 'Acesso tirado');
+        todos(infoGeral());
+        return;
+      }
       case 'camadas':
         if (!Array.isArray(m.lista)) return;
         config.camadas = m.lista
@@ -345,7 +409,7 @@ function iniciarServidor(o) {
     fila.set(id, v);
     if (origem) origemDe.set(id, origem); else origemDe.delete(id);
   }
-  setInterval(() => {
+  const relogioFila = setInterval(() => {
     if (!fila.size) return;
     const lista = [...fila];
     const origens = origemDe;
@@ -374,7 +438,7 @@ function iniciarServidor(o) {
   // --- Medidores: no maximo 25 por segundo --------------------------------
   let ultimosMedidores = null;
   wing.on('medidores', (v) => { ultimosMedidores = v; });
-  setInterval(() => {
+  const relogioMedidores = setInterval(() => {
     if (!ultimosMedidores) return;
     const v = ultimosMedidores;
     ultimosMedidores = null;
@@ -405,7 +469,10 @@ function iniciarServidor(o) {
   });
 
   eventos.fechar = () => {
+    clearInterval(relogioFila);
+    clearInterval(relogioMedidores);
     wing.desconectar();
+    for (const c of clientes) c.ws.terminate();
     wss.close();
     servidor.close();
   };

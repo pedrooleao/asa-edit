@@ -3,7 +3,7 @@
 // O servidor so deixa mexer nos envios do bus escolhido.
 
 import { useEffect, useMemo, useState } from 'react';
-import { def, definir, enviar, indiceMedidor, useGeral, useNumero, useValor, useValores } from '../store';
+import { def, definir, entrarComoTecnico, enviar, indiceMedidor, useGeral, useNumero, useValor, useValores } from '../store';
 import { corWing, gravarLocal, lerLocal, lista, nomeDaTira, textoDb, FADER_MIN } from '../util';
 import { Fader } from '../comp/Fader';
 import { Medidor } from '../comp/Medidor';
@@ -30,7 +30,49 @@ function EscolherMix({ escolher }: { escolher: (n: number) => void }) {
           <BotaoBus key={n} n={n} escolher={escolher} />
         ))}
       </div>
+      <EntrarTecnico />
     </main>
+  );
+}
+
+const MOTIVOS: Record<string, string> = {
+  errada: 'Senha errada.',
+  espere: 'Muitas tentativas. Espere um minuto.',
+  semSenha: 'Ainda não há senha do técnico. Defina em Ajustes, no aparelho principal.',
+};
+
+/** O tecnico entra com a senha e este aparelho passa a controlar a mesa toda. */
+function EntrarTecnico() {
+  const [aberto, setAberto] = useState(false);
+  const [senha, setSenha] = useState('');
+  const [erro, setErro] = useState('');
+  const [enviando, setEnviando] = useState(false);
+  if (!aberto) {
+    return <button className="link cel-tecnico" onClick={() => setAberto(true)}>Sou o técnico: controlar a mesa toda</button>;
+  }
+  return (
+    <form
+      className="cel-tecnico-form"
+      onSubmit={async (ev) => {
+        ev.preventDefault();
+        if (!senha) return;
+        setEnviando(true);
+        const r = await entrarComoTecnico(senha);
+        setEnviando(false);
+        if (r !== 'ok') { setErro(MOTIVOS[r] || 'Não deu certo. Tente de novo.'); setSenha(''); }
+      }}
+    >
+      <label>
+        <span>Senha do técnico</span>
+        <input type="password" autoComplete="current-password" autoFocus value={senha} onChange={(ev) => { setSenha(ev.target.value); setErro(''); }} />
+      </label>
+      {erro && <p className="erro" role="alert">{erro}</p>}
+      <div className="linha-info">
+        <button type="submit" className="primario" disabled={!senha || enviando}>Entrar</button>
+        <button type="button" onClick={() => { setAberto(false); setErro(''); setSenha(''); }}>Cancelar</button>
+      </div>
+      <p className="dica">Este aparelho fica lembrado. Dá para tirar o acesso depois, em Ajustes.</p>
+    </form>
   );
 }
 
@@ -95,7 +137,7 @@ export function Celular() {
     return [...l.filter((f) => favs.includes(f)), ...l.filter((f) => !favs.includes(f))];
   }, [bus, favs, nomesEFontes]);
 
-  const aviso = !ligadoAoApp ? 'Sem conexão com o Mac. Tentando de novo…' : estado !== 'conectado' ? 'O Mac perdeu a mesa. Esperando voltar…' : null;
+  const aviso = !ligadoAoApp ? 'Sem conexão com o Asa Edit. Tentando de novo…' : estado !== 'conectado' ? 'O Asa Edit perdeu a mesa. Esperando voltar…' : null;
 
   if (!bus) return <EscolherMix escolher={escolher} />;
   const p = `/bus/${bus}`;

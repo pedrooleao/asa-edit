@@ -65,7 +65,7 @@ function Shows() {
         <button className="primario com-icone" onClick={() => arquivo.current?.click()}><Icone nome="abrir" tamanho={1.1} />Abrir arquivo .snap…</button>
         <input ref={arquivo} type="file" accept=".snap,.json,application/json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) abrirArquivo(f); e.target.value = ''; }} />
         <label className="caixa"><input type="checkbox" checked={camadas} onChange={(e) => setCamadas(e.target.checked)} /> Trazer as camadas da Compact</label>
-        <label className="caixa"><input type="checkbox" checked={guardar} onChange={(e) => setGuardar(e.target.checked)} /> Guardar uma cópia no Mac</label>
+        <label className="caixa"><input type="checkbox" checked={guardar} onChange={(e) => setGuardar(e.target.checked)} /> Guardar uma cópia no Asa Edit</label>
       </div>
       {carga && (
         <div className="estado">
@@ -80,7 +80,7 @@ function Shows() {
         if (!n) return;
         if (shows.some((s) => s.nome === n) && !(await confirmar(`Já existe um show “${n}”. Substituir?`, { sim: 'Substituir' }))) return;
         enviar({ t: 'salvarSnap', guardarComo: n });
-        setAviso(`“${n}” salvo no Mac.`);
+        setAviso(`“${n}” salvo no Asa Edit.`);
         setTimeout(() => setAviso(''), 3000);
         setNome('');
       }}>
@@ -97,11 +97,11 @@ function Shows() {
             <span className="acoes-linha">
               <button onClick={async () => { if (await confirmar(`Abrir “${s.nome}” na mesa? O estado atual da mesa será trocado.`, { sim: 'Abrir na mesa', perigo: true })) { setCarga({ feito: 0, total: 1, nome: s.nome }); enviar({ t: 'abrirShow', nome: s.nome, camadas }); } }}>Abrir na mesa</button>
               <button className="icone-so" aria-label={`Baixar ${s.nome}`} title="Baixar .snap" onClick={() => enviar({ t: 'baixarShow', nome: s.nome })}><Icone nome="baixar" tamanho={1} /></button>
-              <button className="icone-so" aria-label={`Apagar ${s.nome}`} title="Apagar" onClick={async () => { if (await confirmar(`Apagar o show “${s.nome}” do Mac?`, { sim: 'Apagar', perigo: true })) enviar({ t: 'apagarShow', nome: s.nome }); }}><Icone nome="lixo" tamanho={1} /></button>
+              <button className="icone-so" aria-label={`Apagar ${s.nome}`} title="Apagar" onClick={async () => { if (await confirmar(`Apagar o show “${s.nome}” do Asa Edit?`, { sim: 'Apagar', perigo: true })) enviar({ t: 'apagarShow', nome: s.nome }); }}><Icone nome="lixo" tamanho={1} /></button>
             </span>
           </div>
         ))}
-        {!shows.length && <p className="dica">Nenhum show guardado no Mac ainda.</p>}
+        {!shows.length && <p className="dica">Nenhum show guardado no Asa Edit ainda.</p>}
       </div>
       <p className="dica">As cenas guardadas dentro da própria mesa ainda não aparecem aqui (falta confirmar como acioná-las pela rede).</p>
     </section>

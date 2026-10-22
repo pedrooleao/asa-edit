@@ -38,7 +38,7 @@ export function App() {
   useEffect(() => { if (estado === 'conectado') setJaConectou(true); }, [estado]);
 
   if (!esquema || (!geral && ligadoAoApp)) return <div className="vazio">Abrindo o Asa Edit…</div>;
-  if (!geral) return <div className="vazio">Procurando o Asa Edit no Mac…</div>;
+  if (!geral) return <div className="vazio">Procurando o Asa Edit…</div>;
   if (papel?.papel === 'retorno') return <Celular />;
   // Antes da primeira conexao: tela de conexao. Depois, se cair, a mesma tela
   // de trabalho continua, com o aviso por cima (ver Principal).

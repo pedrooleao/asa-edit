@@ -122,7 +122,7 @@ function JanelaCelular({ bus, fechar }: { bus: number; fechar: () => void }) {
           <div className="qr-corpo">
             <Qr texto={url} />
             <ol className="passos">
-              <li>O celular precisa estar no <strong>mesmo Wi-Fi</strong> do Mac.</li>
+              <li>O celular precisa estar no <strong>mesmo Wi-Fi</strong> do Asa Edit.</li>
               <li>Aponte a câmera para o código.</li>
               <li>O músico só consegue mexer na mix “{nome}”.</li>
             </ol>
@@ -135,7 +135,7 @@ function JanelaCelular({ bus, fechar }: { bus: number; fechar: () => void }) {
               {ordenada.map((r) => <option key={r.ip} value={r.ip}>{r.nome}: {r.ip}</option>)}
             </select>
           )}
-          {!ordenada.length && <span className="aviso-txt">O Mac não está em nenhuma rede.</span>}
+          {!ordenada.length && <span className="aviso-txt">O Asa Edit não está em nenhuma rede.</span>}
         </div>
       </div>
     </div>

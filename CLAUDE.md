@@ -71,6 +71,9 @@ android/               app Android: WebView + o mesmo servidor rodando no nodejs
   re-renderizar React**. Layout do vetor em `MEDIDOR`/`indiceMedidor()` no store.
 - Celulares: o servidor marca quem não é 127.0.0.1 como papel `retorno` (configurável)
   e só deixa escrever envios para o bus escolhido e o próprio bus (`permitidosDoBus`).
+- Aparelhos do técnico: com a senha (`entrar`), o aparelho ganha uma chave que vai em
+  `/ws?chave=` e dá papel `completo` de qualquer lugar da rede. A config guarda só o hash
+  da senha e das chaves; `ASA_SENHA` define a primeira senha num servidor sem tela.
 
 ## Convenções
 

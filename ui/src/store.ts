@@ -2,6 +2,7 @@
 // Tudo chega pelo WebSocket do servidor local.
 
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { gravarLocal, lerLocal } from './util';
 
 export const TIPO = { NO: 0, LINEAR: 1, LOG: 2, FADER: 3, INTEIRO: 4, ENUM: 5, ENUM_FLOAT: 6, TEXTO: 7 } as const;
 export const UNIDADE = ['', 'dB', '%', 'ms', 'Hz', 'm', 's', 'oct'];
@@ -36,6 +37,8 @@ export type Geral = {
     camadas?: Camada[];
     presets?: Preset[];
     temBase?: boolean;
+    temSenha?: boolean;
+    aparelhos?: { id: string; nome: string; criado: number; visto: number }[];
   };
   shows?: { nome: string; data: number }[];
   rede: { nome: string; ip: string }[];
@@ -262,7 +265,7 @@ requestAnimationFrame(laco);
 // ---------------------------------------------------------------------------
 let ws: WebSocket | null = null;
 let geral: Geral | null = null;
-let papel: { papel: 'completo' | 'retorno'; bus: number | null; local: boolean } | null = null;
+let papel: { papel: 'completo' | 'retorno'; bus: number | null; local: boolean; aparelho: string | null } | null = null;
 let progresso = 0;
 let ligadoAoApp = false;
 const aoGeral = new Set<() => void>();
@@ -285,16 +288,64 @@ export function enviar(m: any) {
   if (ws && ws.readyState === 1) ws.send(JSON.stringify(m));
 }
 
+// Aparelho do tecnico: a chave que o servidor deu quando a senha foi certa.
+// Vai junto em toda conexao; se o acesso for tirado, ela e' esquecida.
+const CHAVE = 'chaveDoAparelho';
+
+/** Pede controle completo com a senha do tecnico. Responde 'ok', 'errada', 'espere' ou 'semSenha'. */
+export function entrarComoTecnico(senha: string): Promise<string> {
+  return new Promise((resolve) => {
+    const f = (m: any) => {
+      aoMensagem.get('entrar')?.delete(f);
+      if (m.ok) {
+        gravarLocal(CHAVE, m.chave);
+        ws?.close();   // reconecta ja com a chave
+      }
+      resolve(m.ok ? 'ok' : m.motivo);
+    };
+    if (!aoMensagem.has('entrar')) aoMensagem.set('entrar', new Set());
+    aoMensagem.get('entrar')!.add(f);
+    enviar({ t: 'entrar', senha, nome: nomeDoAparelho() });
+  });
+}
+
+/** Este aparelho volta a ser so um celular de retorno. */
+export function sairComoTecnico() {
+  if (papel?.aparelho) enviar({ t: 'tirarAparelho', id: papel.aparelho });
+  gravarLocal(CHAVE, null);
+  ws?.close();
+}
+
+function nomeDoAparelho() {
+  const ua = navigator.userAgent;
+  // iPad novo se diz "Macintosh"; o que separa do Mac e' a tela de toque.
+  if (/iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'iPad';
+  if (/iPhone/.test(ua)) return 'iPhone';
+  if (/Android/.test(ua)) return /Mobile/.test(ua) ? 'Celular Android' : 'Tablet Android';
+  if (/Mac/.test(ua)) return 'Mac';
+  if (/Windows/.test(ua)) return 'Windows';
+  return 'Aparelho';
+}
+
 export function conectarServidor() {
   const params = new URLSearchParams(location.search);
   const retorno = params.get('retorno');
-  const url = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws${retorno ? `?retorno=${retorno}` : ''}`;
+  const chave = lerLocal<string | null>(CHAVE, null);
+  const busca = new URLSearchParams();
+  if (retorno) busca.set('retorno', retorno);
+  if (chave) busca.set('chave', chave);
+  const url = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws${busca.toString() ? `?${busca}` : ''}`;
   ws = new WebSocket(url);
   ws.onopen = () => { ligadoAoApp = true; avisarGeral(); };
   ws.onmessage = (ev) => {
     const m = JSON.parse(ev.data);
     switch (m.t) {
-      case 'ola': papel = { papel: m.papel, bus: m.bus, local: m.local }; avisarGeral(); break;
+      case 'ola':
+        papel = { papel: m.papel, bus: m.bus, local: m.local, aparelho: m.aparelho || null };
+        // Tinha chave e o servidor nao reconheceu: o acesso foi tirado.
+        if (chave && !m.local && !m.aparelho) gravarLocal(CHAVE, null);
+        avisarGeral();
+        break;
       case 'geral': geral = m; avisarGeral(); break;
       case 'progresso': progresso = m.progresso; avisarGeral(); break;
       case 'tudo': receberValores(m.l); break;
